@@ -6,6 +6,7 @@ import connectCloudinary from './config/cloudinary.js'
 import userRouter from './routes/user.route.js'
 import productRouter from './routes/product.route.js'
 
+
 // App Config
 const app = express()
 const port = process.env.PORT || 4000
@@ -13,7 +14,7 @@ const port = process.env.PORT || 4000
 // Database Connection
 connectDB()
 // connect cloudinary
-connectCloudinary
+connectCloudinary()
 
 // middlewares
 app.use(express.json())
