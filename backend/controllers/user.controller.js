@@ -99,5 +99,16 @@ export const loginUser = async (req, res) => {
 
 // controllers/admin login
 export const adminLogin = async (req, res) => {
-
+  try {
+    const { email, password } = req.body;
+    if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
+      const token = jwt.sign(email+password, process.env.JWT_SECRET);
+      return res.status(200).json(new ApiResponse(200, { token }, "Admin logged in successfully"));
+    } else {
+      return res.status(401).json(new ApiResponse(401, null, "Invalid credentials"));
+    }
+  } catch (error) {
+    console.error("Admin Login Error:", error);
+    return res.status(500).json(new ApiResponse(500, null, "Internal server error"));
+  }
 }
