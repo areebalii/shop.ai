@@ -8,7 +8,7 @@ const Orders = () => {
   const { backendUrl, token, currency } = useContext(ShopContext);
   const [orderData, setOrderData] = useState([]);
 
-  const loadOrderData = async () => {
+const loadOrderData = async () => {
     try {
       if (!token) return null;
 
@@ -18,15 +18,15 @@ const Orders = () => {
         let allOrdersItem = [];
 
         response.data.orders.forEach((order) => {
-          // Check if items exists and is an array
-          if (Array.isArray(order.items)) {
-            order.items.forEach((item) => {
-              // Sometimes backend items are nested in another array [ [{...}] ]
-              const product = Array.isArray(item) ? item[0] : item;
-              
-              if (product && typeof product === 'object') {
+          // Based on your DB log, items[0] contains the actual product array
+          if (Array.isArray(order.items) && Array.isArray(order.items[0])) {
+            
+            // Loop through the inner array which contains the product objects
+            order.items[0].forEach((item) => {
+              // Ensure we are looking at a product object (has an _id and name)
+              if (item && typeof item === 'object' && item._id) {
                 allOrdersItem.push({
-                  ...product,
+                  ...item,
                   status: order.status,
                   paymentMethod: order.paymentMethod,
                   payment: order.payment,
@@ -37,6 +37,7 @@ const Orders = () => {
           }
         });
 
+        // Set state and reverse to show newest first
         setOrderData(allOrdersItem.reverse());
       }
     } catch (error) {
@@ -71,7 +72,7 @@ const Orders = () => {
                       <p className='px-2 border bg-slate-50'>Size: {item.size}</p>
                     </div>
                     <p className='mt-1'>Date: <span className='text-gray-400'>{new Date(item.date).toDateString()}</span></p>
-                    <p className='mt-1'>Payment: <span className='text-gray-400'>{item.status}</span></p>
+                    <p className='mt-1'>Payment: <span className='text-gray-400'>{item.paymentMethod}</span></p>
                   </div>
                 </div>
 
