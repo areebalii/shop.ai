@@ -112,3 +112,42 @@ export const adminLogin = async (req, res) => {
     return res.status(500).json(new ApiResponse(500, null, "Internal server error"));
   }
 }
+
+export const googleAuth = async (req, res) => {
+  try {
+    const { name, email } = req.body;
+
+    // Check if user exists in your MongoDB
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create a new user if not found
+      // Note: We hash a random string because your schema requires a password
+      const randomPassword = Math.random().toString(36).slice(-16);
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(randomPassword, salt);
+
+      user = await User.create({
+        name,
+        email,
+        password: hashedPassword,
+      });
+    }
+
+    // Use your existing JWT creation logic
+    const token = createToken(user._id);
+
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    return res.status(200).json({
+      success: true,
+      data: { user: userResponse, token },
+      message: "Google Login Successful"
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: "Server Error" });
+  }
+};

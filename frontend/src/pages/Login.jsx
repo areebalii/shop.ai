@@ -2,6 +2,8 @@ import React, { useContext, useEffect, useState } from 'react'
 import { ShopContext } from '../context/ShopContext'
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { auth, googleProvider } from '../config/firebase';
+import { signInWithPopup } from 'firebase/auth';
 
 const Login = () => {
 
@@ -45,6 +47,39 @@ const Login = () => {
       toast.error(errorMsg);
     }
   }
+
+  const onGoogleSignIn = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+
+      // Send the user info to your backend
+      const response = await axios.post(backendUrl + '/api/user/google', {
+        name: user.displayName,
+        email: user.email,
+      });
+
+      if (response.data.success) {
+        // Use the same path as your standard login
+        const receivedToken = response.data.data.token; 
+        setToken(receivedToken);
+        localStorage.setItem('token', receivedToken);
+        toast.success("Google Login Successful!");
+        // Navigation is handled by your useEffect
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      // Handle the case where the user closes the popup without signing in
+      if (error.code === 'auth/popup-closed-by-user') {
+        toast.info("Login cancelled");
+      } else {
+        console.error(error);
+        toast.error("Google Sign-In Failed");
+      }
+    }
+  };
+
   useEffect(() => {
    if(token){
     navigate('/');
@@ -70,6 +105,17 @@ const Login = () => {
         }
       </div>
       <button className='bg-black text-white font-light px-8 py-2 mt-4'>{currentState === 'Login' ? 'Sign In' : 'Sign Up'}</button>
+      <div className='flex flex-col items-center gap-2 mt-4 w-full'>
+        <p className='text-gray-500 text-xs'>OR</p>
+        <button 
+          type="button" 
+          onClick={onGoogleSignIn}
+          className='flex items-center justify-center gap-2 border border-gray-800 w-full py-2 hover:bg-gray-50 transition'
+        >
+          <img className='w-5' src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" />
+          Continue with Google
+        </button>
+      </div>
     </form>
   )
 }
