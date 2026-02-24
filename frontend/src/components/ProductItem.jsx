@@ -113,6 +113,7 @@ const ProductItem = ({ id, image, name, price, sizes }) => {
                                 View Full Details
                             </Link>
                         </div>
+                        
                     </div>
                 </div>
             )}
