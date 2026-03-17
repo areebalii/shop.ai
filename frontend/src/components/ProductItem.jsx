@@ -1,21 +1,18 @@
-import React, { useContext, useState, useEffect } from 'react'
+import React, { useContext, useState } from 'react'
 import { ShopContext } from '../context/ShopContext'
 import { Link } from 'react-router-dom'
 import { assets } from '../assets/assets'
 import { toast } from 'react-toastify'
 
 const ProductItem = ({ id, image, name, price, sizes }) => {
-    const { currency, addToCart } = useContext(ShopContext);
+
+    // 1. ADD 'wishlist' and 'toggleWishlist' to the destructuring
+    const { currency, addToCart, wishlist, toggleWishlist } = useContext(ShopContext);
+
     const [showQuickView, setShowQuickView] = useState(false);
     const [selectedSize, setSelectedSize] = useState('');
 
-    // Placeholder for Wishlist functionality
-    const addToWishlist = (e) => {
-        e.preventDefault();
-        // Future logic: toggle favorite state or call backend API
-        toast.info("Added to wishlist! (Functionality coming soon)");
-    }
-
+    // 2. REMOVE the placeholder function and use the one from Context
     const handleAddToCart = (e) => {
         e.preventDefault();
 
@@ -30,20 +27,25 @@ const ProductItem = ({ id, image, name, price, sizes }) => {
         toast.success("Added to cart!");
     }
 
+    // 3. Check if this specific product is in the wishlist array
+    const isWishlisted = wishlist.includes(id);
+
     return (
         <div className='relative group bg-white rounded-xl transition-all duration-300 hover:shadow-lg p-2'>
 
-            {/* --- UPDATED FLOATING ICONS (Wishlist Heart) --- */}
+            {/* Floating Icons */}
             <div className='absolute top-4 right-[-40px] group-hover:right-4 z-20 flex flex-col gap-2 transition-all duration-500 opacity-0 group-hover:opacity-100 hidden sm:flex'>
+
+                {/* 4. UPDATE the wishlist button */}
                 <button
-                    onClick={addToWishlist}
-                    className='w-10 h-10 flex items-center justify-center bg-white text-gray-700 rounded-full shadow-md hover:bg-red-50 hover:text-red-500 transition-colors duration-300'
-                    title="Add to Wishlist"
+                    onClick={(e) => { e.preventDefault(); toggleWishlist(id); }}
+                    className={`w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-md transition-colors duration-300 ${isWishlisted ? 'text-red-500' : 'text-gray-700 hover:text-red-500'}`}
+                    title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
                 >
-                    {/* If you have a wishlist icon in assets use: <img src={assets.wishlist_icon} className='w-5' /> */}
-                    {/* Using a text heart for now so it works immediately */}
-                    <span className="text-xl">♥</span>
+                    {/* Toggle between filled and empty heart */}
+                    <span className="text-xl">{isWishlisted ? '❤️' : '♡'}</span>
                 </button>
+
                 <button
                     onClick={(e) => { e.preventDefault(); setShowQuickView(true) }}
                     className='w-10 h-10 flex items-center justify-center bg-white text-gray-700 rounded-full shadow-md hover:bg-black hover:text-white transition-colors duration-300 font-bold text-[10px] uppercase'
@@ -73,7 +75,7 @@ const ProductItem = ({ id, image, name, price, sizes }) => {
                 </div>
             </Link>
 
-            {/* --- QUICK VIEW MODAL --- */}
+            {/* Quick View Modal (Remains the same as your code) */}
             {showQuickView && (
                 <div className='fixed inset-0 z-[1000] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4' onClick={() => setShowQuickView(false)}>
                     <div

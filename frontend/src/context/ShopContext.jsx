@@ -15,6 +15,7 @@ const ShopContextProvider = (props) => {
     const [cartItems, setCartItems] = useState({});
     const navigate = useNavigate();
     const [products, setProducts] = useState([]);
+    const [wishlist, setWishlist] = useState([]);
     const [token, setToken] = useState('');
 
     const addToCart = async (itemId, size) => {
@@ -106,8 +107,6 @@ const ShopContextProvider = (props) => {
         return totalAmount;
     }
 
-
-
     const getProductData = async () => {
         try {
             const response = await axios.get(backendUrl + '/api/product/list');
@@ -135,6 +134,50 @@ const ShopContextProvider = (props) => {
         }
     }
 
+    const toggleWishlist = async (itemId) => {
+        if (!token) {
+            toast.error("Please login to use Wishlist");
+            return;
+        }
+
+        let updatedWishlist = [...wishlist];
+        const isAdded = updatedWishlist.includes(itemId);
+
+        // Update UI immediately
+        if (isAdded) {
+            updatedWishlist = updatedWishlist.filter(id => id !== itemId);
+            setWishlist(updatedWishlist);
+        } else {
+            updatedWishlist.push(itemId);
+            setWishlist(updatedWishlist);
+        }
+
+        // Sync with Database
+        try {
+            if (isAdded) {
+                await axios.post(backendUrl + '/api/wishlist/remove', { itemId }, { headers: { token } });
+                toast.success("Removed from wishlist");
+            } else {
+                await axios.post(backendUrl + '/api/wishlist/add', { itemId }, { headers: { token } });
+                toast.success("Added to wishlist");
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to update wishlist");
+        }
+    }
+    const getUserWishlist = async (token) => {
+        try {
+            const response = await axios.post(backendUrl + '/api/wishlist/get', {}, { headers: { token } });
+            if (response.data.success) {
+                setWishlist(response.data.wishlistData);
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error(error.message);
+        }
+    }
+
     useEffect(() => {
         getProductData();
     }, [])
@@ -143,6 +186,7 @@ const ShopContextProvider = (props) => {
         if (!token && localStorage.getItem('token')) {
             setToken(localStorage.getItem('token'));
             getUserCart(localStorage.getItem('token'));
+            getUserWishlist(localStorage.getItem('token'));
         }
     }, [])
 
@@ -153,7 +197,8 @@ const ShopContextProvider = (props) => {
         cartItems, addToCart, setCartItems,
         getCartCount, updateQuantity,
         getCartAmount, navigate,
-        backendUrl, token, setToken
+        backendUrl, token, setToken,
+        wishlist, toggleWishlist
     }
 
     return (
