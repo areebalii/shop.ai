@@ -1,7 +1,8 @@
 import express from "express";
-import { addProduct, listProducts, removeProduct, singleProduct } from "../controllers/product.controller.js";
+import { addProduct, listProducts, removeProduct, singleProduct, addReview, updateReview, deleteReview } from "../controllers/product.controller.js";
 import upload from "../middleware/multer.middleware.js";
 import { adminAuth } from "../middleware/adminAuth.middleware.js";
+import { authUser } from "../middleware/Auth.middleware.js";
 
 const productRouter = express.Router();
 
@@ -14,5 +15,8 @@ productRouter.post("/add", adminAuth, upload.fields([
 productRouter.post("/remove", adminAuth, removeProduct)
 productRouter.post("/single", singleProduct)
 productRouter.get("/list", listProducts)
+productRouter.post("/review", authUser, addReview)
+productRouter.post('/update-review', authUser, updateReview);
+productRouter.post('/delete-review', authUser, deleteReview);
 
 export default productRouter;

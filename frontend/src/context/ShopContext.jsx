@@ -2,6 +2,8 @@ import { createContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
+
 
 export const ShopContext = createContext();
 
@@ -17,6 +19,7 @@ const ShopContextProvider = (props) => {
     const [products, setProducts] = useState([]);
     const [wishlist, setWishlist] = useState([]);
     const [token, setToken] = useState('');
+    const [userId, setUserId] = useState("");
 
     const addToCart = async (itemId, size) => {
 
@@ -183,12 +186,21 @@ const ShopContextProvider = (props) => {
     }, [])
 
     useEffect(() => {
-        if (!token && localStorage.getItem('token')) {
-            setToken(localStorage.getItem('token'));
-            getUserCart(localStorage.getItem('token'));
-            getUserWishlist(localStorage.getItem('token'));
+        const storedToken = localStorage.getItem('token');
+        if (!token && storedToken) {
+            setToken(storedToken);
+            getUserCart(storedToken);
+            getUserWishlist(storedToken);
+
+            // --- NEW LOGIC: Decode token to get User ID ---
+            try {
+                const decoded = jwtDecode(storedToken);
+                setUserId(decoded.id); // Assuming your backend token payload has { id: "..." }
+            } catch (error) {
+                console.error("Token decoding failed", error);
+            }
         }
-    }, [])
+    }, [token]) // Added token as dependency to re-run when user logs in
 
 
     const value = {
@@ -198,7 +210,8 @@ const ShopContextProvider = (props) => {
         getCartCount, updateQuantity,
         getCartAmount, navigate,
         backendUrl, token, setToken,
-        wishlist, toggleWishlist
+        wishlist, toggleWishlist,
+        userId, setUserId // --- ADDED THIS TO EXPORT ---
     }
 
     return (

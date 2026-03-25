@@ -2,10 +2,10 @@ import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema({
     name: {
-        type: String, 
+        type: String,
         required: true
     },
-    description: {  
+    description: {
         type: String,
         required: true
     },
@@ -30,13 +30,26 @@ const productSchema = new mongoose.Schema({
         required: true
     },
     bestSeller: {
-      type: Boolean,
-      default: false
+        type: Boolean,
+        default: false
+    },
+    reviews: [
+        {
+            userId: { type: String, required: true },
+            userName: { type: String, required: true },
+            rating: { type: Number, required: true },
+            comment: { type: String, required: true },
+            date: { type: Date, default: Date.now }
+        }
+    ],
+    averageRating: {
+        type: Number,
+        default: 0
     },
     date: {
         type: Number,
         required: true
-    }    
-}, { timestamps: true });  
+    }
+}, { timestamps: true });
 
 export default mongoose.model('Product', productSchema);
