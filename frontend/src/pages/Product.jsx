@@ -18,6 +18,8 @@ const Product = () => {
   const [rating, setRating] = useState(5);
   const [isEditing, setIsEditing] = useState(false);
 
+  // State for "Show More" reviews
+  const [visibleReviews, setVisibleReviews] = useState(3);
 
   const fetchProductData = async () => {
     if (products.length > 0) {
@@ -38,7 +40,15 @@ const Product = () => {
         );
         if (response.data.success) {
           toast.success(response.data.message);
-          fetchProductData();
+
+          // Local state update for delete
+          const updatedProducts = products.map((item) => {
+            if (item._id === productId) {
+              return { ...item, reviews: item.reviews.filter(r => r.userId !== userId) };
+            }
+            return item;
+          });
+          setProducts(updatedProducts);
         }
       } catch (error) {
         toast.error(error.message);
@@ -57,11 +67,8 @@ const Product = () => {
       );
 
       if (response.data.success) {
-
-        // 1. Create the new review object (or get it from response.data)
         const updatedReview = { userId, userName: "You", rating, comment, date: Date.now() };
 
-        // 2. Update the Global Products array without a network request
         const updatedProducts = products.map((item) => {
           if (item._id === productId) {
             const newReviews = isEditing
@@ -73,13 +80,22 @@ const Product = () => {
           return item;
         });
 
-        setProducts(updatedProducts); // Updates the whole app instantly
-        toast.success("Review updated!");
+        setProducts(updatedProducts);
+        setComment("");
+        setRating(5);
+        setIsEditing(false);
+        toast.success(isEditing ? "Review updated!" : "Review posted!");
       }
     } catch (error) {
       toast.error(error.message);
     }
   }
+
+  // scroll to top 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setVisibleReviews(3);
+  }, [productId]);
 
   useEffect(() => {
     fetchProductData();
@@ -89,148 +105,191 @@ const Product = () => {
   const reviewCount = productData.reviews ? productData.reviews.length : 0;
 
   return productData ? (
-    <div className='border-t-2 pt-10 transition-opacity ease-in duration-500 opacity-100'>
+    <div className='border-t-2 pt-10 transition-opacity ease-in duration-500 opacity-100 max-w-7xl mx-auto px-4'>
 
+      {/* ... (Previous Product Details Section remains the same) ... */}
       <div className='flex gap-12 flex-col sm:flex-row'>
-        {/*--- Product Images ---*/}
         <div className='flex-1 flex flex-col-reverse gap-3 sm:flex-row'>
           <div className='flex sm:flex-col overflow-x-auto sm:overflow-y-scroll justify-between sm:justify-normal sm:w-[18.7%] w-full'>
             {productData.image.map((item, index) => (
-              <img onClick={() => setImage(item)} src={item} key={index} className='w-[24%] sm:w-full sm:mb-3 flex-shrink-0 cursor-pointer' alt="" />
+              <img onClick={() => setImage(item)} src={item} key={index} className='w-[24%] sm:w-full sm:mb-3 flex-shrink-0 cursor-pointer rounded-md border hover:border-black transition' alt="" />
             ))}
           </div>
           <div className='w-full sm:w-[80%]'>
-            <img className='w-full h-auto' src={image} alt="" />
+            <img className='w-full h-auto rounded-lg' src={image} alt="" />
           </div>
         </div>
 
-        {/*--- Product Info ---*/}
         <div className='flex-1'>
-          <h1 className='font-medium text-2xl mt-2'>{productData.name}</h1>
-          <div className='flex items-center gap-1 mt-2'>
+          <h1 className='font-bold text-3xl mt-2 text-gray-800'>{productData.name}</h1>
+          <div className='flex items-center gap-1 mt-3'>
             {[1, 2, 3, 4, 5].map((num) => (
-              <img key={num} src={num <= averageRating ? assets.star_icon : assets.star_dull_icon} alt="" className='w-3.5' />
+              <img key={num} src={num <= averageRating ? assets.star_icon : assets.star_dull_icon} alt="" className='w-4' />
             ))}
-            <p className='pl-2 text-gray-500'>({reviewCount})</p>
+            <p className='pl-2 text-gray-400 font-medium'>({reviewCount} reviews)</p>
           </div>
-          <p className='mt-5 text-3xl font-medium'>{currency}{productData.price}</p>
-          <p className='mt-5 text-gray-500 md:w-4/5'>{productData.description}</p>
+          <p className='mt-5 text-4xl font-bold text-black'>{currency}{productData.price}</p>
+          <p className='mt-5 text-gray-600 leading-relaxed md:w-4/5'>{productData.description}</p>
+
+          {/* Size Selector */}
           <div className='flex flex-col gap-4 my-8'>
-            <p>Select Size</p>
+            <p className='font-semibold'>Select Size</p>
             <div className='flex gap-2'>
               {productData.sizes.map((item, index) => (
-                <button onClick={() => setSize(item)} className={`border py-2 px-4 bg-gray-100 ${item === size ? 'border-orange-500' : ''} `} key={index}>{item}</button>
+                <button onClick={() => setSize(item)} className={`border-2 py-2 px-5 rounded-sm transition-all ${item === size ? 'border-black bg-black text-white' : 'bg-gray-50 hover:border-gray-400'} `} key={index}>{item}</button>
               ))}
             </div>
           </div>
-          <button onClick={() => addToCart(productData._id, size)} className='bg-black text-white px-8 py-3 text-sm active:bg-gray-700'>ADD TO CART</button>
+          <button onClick={() => addToCart(productData._id, size)} className='bg-black text-white px-10 py-4 text-sm font-bold active:bg-gray-700 transition-all uppercase tracking-widest rounded-sm'>ADD TO CART</button>
           <hr className='mt-8 sm:w-4/5' />
-          <div className='text-sm text-gray-500 mt-5 flex flex-col gap-1'>
-            <p>100% Original product.</p>
-            <p>Cash on delivery is available on this product.</p>
-            <p>Easy return and exchange policy within 7 days.</p>
+          <div className='text-sm text-gray-500 mt-5 flex flex-col gap-2'>
+            <p className='flex items-center gap-2'>✅ 100% Original product.</p>
+            <p className='flex items-center gap-2'>🚚 Cash on delivery is available.</p>
+            <p className='flex items-center gap-2'>🔄 Easy 7-day return policy.</p>
           </div>
         </div>
       </div>
 
-      {/*--- Description & Review Toggle Section ---*/}
+      {/*--- Description & Reviews ---*/}
       <div className='mt-20'>
-        <div className='flex'>
-          <b className='border px-5 py-3 text-sm'>Description</b>
-          <b className='border px-5 py-3 text-sm'>Reviews ({reviewCount})</b>
+        <div className='flex border-b'>
+          <p className='border-x border-t px-8 py-4 text-sm font-bold cursor-pointer'>Description</p>
+          <p className='px-8 py-4 text-sm text-gray-500 cursor-pointer'>Reviews ({reviewCount})</p>
         </div>
-        <div className='flex flex-col gap-4 border px-6 py-6 text-sm text-gray-500'>
+        <div className='border p-8 text-sm text-gray-600 leading-7'>
           <p>{productData.description}</p>
-          <p>High quality material and premium finish.</p>
         </div>
       </div>
 
-      {/*--- Review Section ---*/}
-      <div className='mt-20'>
-        <h2 className='text-xl font-bold mb-6'>Customer Reviews</h2>
+      {/*--- DESIGNED REVIEW SECTION ---*/}
+      <div className='mt-16 grid grid-cols-1 lg:grid-cols-3 gap-12'>
 
-        {/* Review Form */}
-        {token ? (
-          <form onSubmit={submitReview} className='bg-gray-50 p-6 rounded-lg mb-10'>
-            <p className='font-medium mb-2'>{isEditing ? "Edit your Review" : "Leave a Review"}</p>
-            <div className='flex gap-1 mb-4'>
-              {[1, 2, 3, 4, 5].map((num) => (
-                <img
-                  key={num}
-                  onClick={() => setRating(num)}
-                  src={num <= rating ? assets.star_icon : assets.star_dull_icon}
-                  className='w-5 cursor-pointer'
-                  alt="star"
-                />
-              ))}
-            </div>
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              className='w-full border p-3 rounded text-sm outline-none focus:border-black'
-              rows="3"
-              placeholder="Share your thoughts..."
-              required
-            ></textarea>
-            <div className='flex gap-2'>
-              <button type="submit" className='bg-black text-white px-6 py-2 mt-3 text-xs uppercase tracking-widest'>
-                {isEditing ? "Update Review" : "Submit Review"}
-              </button>
-              {isEditing && (
-                <button onClick={() => { setIsEditing(false); setComment(""); setRating(5); }} className='bg-gray-300 text-black px-6 py-2 mt-3 text-xs uppercase tracking-widest'>
-                  Cancel
-                </button>
-              )}
-            </div>
-          </form>
-        ) : (
-          <div className='p-4 bg-orange-50 text-orange-700 text-sm rounded mb-8'>
-            Please <Link to='/login' className='underline font-bold'>Login</Link> to write a review.
-          </div>
-        )}
+        {/* Review Form (Left Side on Desktop) */}
+        <div className='lg:col-span-1'>
+          <div className='sticky top-10'>
+            <h2 className='text-2xl font-bold text-gray-800 mb-2'>Share your thoughts</h2>
+            <p className='text-gray-500 text-sm mb-6'>If you've used this product, let us know what you think!</p>
 
-        {/* List of Reviews */}
-        <div className='flex flex-col gap-6'>
-          {productData.reviews && productData.reviews.length > 0 ? (
-            [...productData.reviews].reverse().map((rev, index) => (
-              <div key={index} className='border-b pb-4'>
-                <div className='flex items-center justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <p className='font-bold text-sm'>{rev.userName}</p>
-                    <div className='flex'>
-                      {[1, 2, 3, 4, 5].map(n => (
-                        <img key={n} src={n <= rev.rating ? assets.star_icon : assets.star_dull_icon} className='w-3' alt="" />
-                      ))}
-                    </div>
-                    <p className='text-xs text-gray-400'>{new Date(rev.date).toLocaleDateString()}</p>
-                  </div>
-
-                  {/* FIXED: Check using userId from Context */}
-                  {token && rev.userId === userId && (
-                    <div className='flex gap-3 text-xs'>
-                      <button
-                        onClick={() => {
-                          setIsEditing(true);
-                          setComment(rev.comment);
-                          setRating(rev.rating);
-                          window.scrollTo({ top: 700, behavior: 'smooth' });
-                        }}
-                        className='text-blue-500 hover:underline'
-                      >
-                        Edit
-                      </button>
-                      <button onClick={deleteReview} className='text-red-500 hover:underline'>
-                        Delete
-                      </button>
-                    </div>
+            {token ? (
+              <form onSubmit={submitReview} className='bg-white border p-6 rounded-xl shadow-sm'>
+                <p className='font-bold mb-4 text-gray-700'>{isEditing ? "Update your experience" : "Rate the product"}</p>
+                <div className='flex gap-2 mb-6'>
+                  {[1, 2, 3, 4, 5].map((num) => (
+                    <img
+                      key={num}
+                      onClick={() => setRating(num)}
+                      src={num <= rating ? assets.star_icon : assets.star_dull_icon}
+                      className='w-7 cursor-pointer hover:scale-125 transition-transform'
+                      alt="star"
+                    />
+                  ))}
+                </div>
+                <textarea
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  className='w-full border-2 border-gray-100 p-4 rounded-lg text-sm outline-none focus:border-black transition-colors bg-gray-50'
+                  rows="4"
+                  placeholder="What did you like or dislike?"
+                  required
+                ></textarea>
+                <div className='flex flex-col gap-3 mt-4'>
+                  <button type="submit" className='w-full bg-black text-white py-3 rounded-lg text-sm font-bold hover:bg-gray-800 transition shadow-md'>
+                    {isEditing ? "SAVE CHANGES" : "POST REVIEW"}
+                  </button>
+                  {isEditing && (
+                    <button onClick={() => { setIsEditing(false); setComment(""); setRating(5); }} className='w-full bg-gray-100 text-gray-600 py-2 rounded-lg text-xs font-bold uppercase'>
+                      Cancel Editing
+                    </button>
                   )}
                 </div>
-                <p className='text-gray-600 text-sm mt-2 italic'>"{rev.comment}"</p>
+              </form>
+            ) : (
+              <div className='p-6 bg-orange-50 border border-orange-100 rounded-xl text-center'>
+                <p className='text-orange-800 text-sm mb-4'>You must be logged in to post a review.</p>
+                <Link to='/login' className='inline-block bg-orange-600 text-white px-6 py-2 rounded-full text-sm font-bold shadow-sm'>Login Now</Link>
               </div>
-            ))
-          ) : (
-            <p className='text-gray-400 text-sm italic'>No reviews yet.</p>
-          )}
+            )}
+          </div>
+        </div>
+
+        {/* Reviews List (Right Side on Desktop) */}
+        <div className='lg:col-span-2'>
+          <div className='flex items-center justify-between mb-8'>
+            <h2 className='text-2xl font-bold text-gray-800'>Verified Reviews</h2>
+            <div className='flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full'>
+              <img src={assets.star_icon} className='w-3' alt="" />
+              <span className='font-bold text-sm'>{averageRating.toFixed(1)}</span>
+            </div>
+          </div>
+
+          <div className='flex flex-col gap-6'>
+            {productData.reviews && productData.reviews.length > 0 ? (
+              <>
+                {[...productData.reviews].reverse().slice(0, visibleReviews).map((rev, index) => (
+                  <div key={index} className='bg-white border-b pb-8 group'>
+                    <div className='flex items-start justify-between'>
+                      <div className='flex items-center gap-4'>
+                        {/* User Avatar Initial */}
+                        <div className='w-10 h-10 bg-gray-800 text-white flex items-center justify-center rounded-full font-bold text-sm'>
+                          {rev.userName.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className='flex items-center gap-2'>
+                            <p className='font-bold text-gray-800'>{rev.userName}</p>
+                            <div className='flex ml-2'>
+                              {[1, 2, 3, 4, 5].map(n => (
+                                <img key={n} src={n <= rev.rating ? assets.star_icon : assets.star_dull_icon} className='w-3' alt="" />
+                              ))}
+                            </div>
+                          </div>
+                          <p className='text-[11px] text-gray-400 mt-0.5 uppercase tracking-wider font-semibold'>
+                            Published on {new Date(rev.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </p>
+                        </div>
+                      </div>
+
+                      {token && rev.userId === userId && (
+                        <div className='flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity'>
+                          <button
+                            onClick={() => {
+                              setIsEditing(true);
+                              setComment(rev.comment);
+                              setRating(rev.rating);
+                              window.scrollTo({ top: 700, behavior: 'smooth' });
+                            }}
+                            className='text-gray-400 hover:text-black transition-colors'
+                          >
+                            <span className='text-[11px] font-bold uppercase border-b border-gray-300 hover:border-black'>Edit</span>
+                          </button>
+                          <button onClick={deleteReview} className='text-red-300 hover:text-red-600 transition-colors'>
+                            <span className='text-[11px] font-bold uppercase border-b border-red-100 hover:border-red-600'>Delete</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    <p className='text-gray-600 text-[15px] mt-4 leading-relaxed font-light italic'>"{rev.comment}"</p>
+                  </div>
+                ))}
+
+                {/* Show More Button */}
+                {productData.reviews.length > visibleReviews && (
+                  <div className='text-center mt-4'>
+                    <button
+                      onClick={() => setVisibleReviews(prev => prev + 5)}
+                      className='bg-white border-2 border-gray-200 px-8 py-3 rounded-full text-sm font-bold text-gray-800 hover:border-black transition-all active:scale-95'
+                    >
+                      SHOW MORE REVIEWS
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className='text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200'>
+                <p className='text-gray-400 font-medium italic'>No reviews found for this product yet.</p>
+                <p className='text-xs text-gray-300 mt-2 font-bold uppercase tracking-widest'>Be the first to share your experience!</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
