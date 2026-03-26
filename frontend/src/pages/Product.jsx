@@ -9,7 +9,7 @@ import axios from 'axios';
 const Product = () => {
 
   const { productId } = useParams();
-  const { products, currency, addToCart, token, backendUrl, userId } = useContext(ShopContext);
+  const { products, setProducts, currency, addToCart, token, backendUrl, userId } = useContext(ShopContext);
 
   const [productData, setProductData] = useState(false);
   const [image, setImage] = useState('')
@@ -17,6 +17,7 @@ const Product = () => {
   const [comment, setComment] = useState("");
   const [rating, setRating] = useState(5);
   const [isEditing, setIsEditing] = useState(false);
+
 
   const fetchProductData = async () => {
     if (products.length > 0) {
@@ -56,13 +57,24 @@ const Product = () => {
       );
 
       if (response.data.success) {
-        toast.success(response.data.message);
-        setComment("");
-        setRating(5);
-        setIsEditing(false);
-        fetchProductData();
-      } else {
-        toast.error(response.data.message);
+
+        // 1. Create the new review object (or get it from response.data)
+        const updatedReview = { userId, userName: "You", rating, comment, date: Date.now() };
+
+        // 2. Update the Global Products array without a network request
+        const updatedProducts = products.map((item) => {
+          if (item._id === productId) {
+            const newReviews = isEditing
+              ? item.reviews.map(r => r.userId === userId ? updatedReview : r)
+              : [...item.reviews, updatedReview];
+
+            return { ...item, reviews: newReviews };
+          }
+          return item;
+        });
+
+        setProducts(updatedProducts); // Updates the whole app instantly
+        toast.success("Review updated!");
       }
     } catch (error) {
       toast.error(error.message);

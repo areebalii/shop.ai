@@ -211,7 +211,7 @@ const ShopContextProvider = (props) => {
         getCartAmount, navigate,
         backendUrl, token, setToken,
         wishlist, toggleWishlist,
-        userId, setUserId // --- ADDED THIS TO EXPORT ---
+        userId, setUserId, setProducts, getProductData
     }
 
     return (
