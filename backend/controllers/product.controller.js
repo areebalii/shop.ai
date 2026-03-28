@@ -197,36 +197,36 @@ export const updateProduct = async (req, res) => {
   try {
     const { id, name, description, price, category, subCategory, sizes, bestSeller } = req.body;
 
-    // 1. Find the existing product
     const product = await Product.findById(id);
     if (!product) {
       return res.json({ success: false, message: "Product not found" });
     }
 
-    // 2. Handle Image Updates
-    const image1 = req.files.image1 && req.files.image1[0]
-    const image2 = req.files.image2 && req.files.image2[0]
-    const image3 = req.files.image3 && req.files.image3[0]
-    const image4 = req.files.image4 && req.files.image4[0]
+    // 1. Get existing images from the database
+    let currentImages = [...product.image];
 
-    const images = [image1, image2, image3, image4].filter((item) => item !== undefined)
+    // 2. Map through the 4 possible image slots
+    const imageKeys = ['image1', 'image2', 'image3', 'image4'];
 
-    let imagesUrl = [...product.image]; // Start with existing images
+    for (let i = 0; i < imageKeys.length; i++) {
+      const file = req.files[imageKeys[i]] && req.files[imageKeys[i]][0];
 
-    if (images.length > 0) {
-      // Upload new images to Cloudinary
-      const newImagesUpload = await Promise.all(
-        images.map(async (item) => {
-          let result = await cloudinary.uploader.upload(item.path, { resource_type: 'image' });
-          return result.secure_url;
-        })
-      );
+      if (file) {
+        // If a new file was uploaded for this slot, upload to Cloudinary
+        const result = await cloudinary.uploader.upload(file.path, {
+          resource_type: 'image',
+          folder: "ecommerce/products"
+        });
 
-      // If any new images are uploaded, we update the array.
-      imagesUrl = newImagesUpload.length > 0 ? newImagesUpload : product.image;
+        // Replace the specific index in the array
+        currentImages[i] = result.secure_url;
+      }
+      // If no file was uploaded for this slot, currentImages[i] remains as it was
     }
 
-    // 3. Prepare Update Data
+    // 3. Clean up the array (remove any null/undefined if you want a tight array)
+    const updatedImagesUrl = currentImages.filter(img => img !== null && img !== undefined);
+
     const updateData = {
       name,
       description,
@@ -235,16 +235,14 @@ export const updateProduct = async (req, res) => {
       subCategory,
       bestSeller: bestSeller === "true" ? true : false,
       sizes: JSON.parse(sizes),
-      image: imagesUrl
-    }
+      image: updatedImagesUrl
+    };
 
-    // 4. Update in Database
     await Product.findByIdAndUpdate(id, updateData);
 
     res.json({ success: true, message: "Product Updated Successfully" });
 
   } catch (error) {
-    console.log(error);
     res.json({ success: false, message: error.message });
   }
 }
