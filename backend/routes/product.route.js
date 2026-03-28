@@ -1,5 +1,5 @@
 import express from "express";
-import { addProduct, listProducts, removeProduct, singleProduct, addReview, updateReview, deleteReview } from "../controllers/product.controller.js";
+import { addProduct, listProducts, removeProduct, singleProduct, addReview, updateReview, deleteReview, updateProduct, getDashboardStats } from "../controllers/product.controller.js";
 import upload from "../middleware/multer.middleware.js";
 import { adminAuth } from "../middleware/adminAuth.middleware.js";
 import { authUser } from "../middleware/Auth.middleware.js";
@@ -18,5 +18,9 @@ productRouter.get("/list", listProducts)
 productRouter.post("/review", authUser, addReview)
 productRouter.post('/update-review', authUser, updateReview);
 productRouter.post('/delete-review', authUser, deleteReview);
+
+productRouter.post('/update', adminAuth, upload.fields([{ name: 'image1', maxCount: 1 }, { name: 'image2', maxCount: 1 }, { name: 'image3', maxCount: 1 }, { name: 'image4', maxCount: 1 }]), updateProduct);
+
+productRouter.get('/stats', adminAuth, getDashboardStats);
 
 export default productRouter;

@@ -2,6 +2,7 @@ import { v2 as cloudinary } from "cloudinary";
 import { ApiResponse } from "../utils/apiResponse.js";
 import Product from "../models/product.model.js";
 import User from "../models/user.model.js";
+import Order from "../models/order.model.js";
 
 // function to add products
 export const addProduct = async (req, res) => {
@@ -189,5 +190,115 @@ export const deleteReview = async (req, res) => {
     res.json({ success: true, message: "Review deleted successfully" });
   } catch (error) {
     res.json({ success: false, message: error.message });
+  }
+}
+
+export const updateProduct = async (req, res) => {
+  try {
+    const { id, name, description, price, category, subCategory, sizes, bestSeller } = req.body;
+
+    // 1. Find the existing product
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.json({ success: false, message: "Product not found" });
+    }
+
+    // 2. Handle Image Updates
+    const image1 = req.files.image1 && req.files.image1[0]
+    const image2 = req.files.image2 && req.files.image2[0]
+    const image3 = req.files.image3 && req.files.image3[0]
+    const image4 = req.files.image4 && req.files.image4[0]
+
+    const images = [image1, image2, image3, image4].filter((item) => item !== undefined)
+
+    let imagesUrl = [...product.image]; // Start with existing images
+
+    if (images.length > 0) {
+      // Upload new images to Cloudinary
+      const newImagesUpload = await Promise.all(
+        images.map(async (item) => {
+          let result = await cloudinary.uploader.upload(item.path, { resource_type: 'image' });
+          return result.secure_url;
+        })
+      );
+
+      // If any new images are uploaded, we update the array.
+      imagesUrl = newImagesUpload.length > 0 ? newImagesUpload : product.image;
+    }
+
+    // 3. Prepare Update Data
+    const updateData = {
+      name,
+      description,
+      category,
+      price: Number(price),
+      subCategory,
+      bestSeller: bestSeller === "true" ? true : false,
+      sizes: JSON.parse(sizes),
+      image: imagesUrl
+    }
+
+    // 4. Update in Database
+    await Product.findByIdAndUpdate(id, updateData);
+
+    res.json({ success: true, message: "Product Updated Successfully" });
+
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+}
+
+export const getDashboardStats = async (req, res) => {
+  try {
+    const totalProducts = await Product.countDocuments();
+    const categoryData = await Product.aggregate([
+      { $group: { _id: "$category", count: { $sum: 1 } } }
+    ]);
+
+    const orders = await Order.find({});
+    const totalOrders = orders.length;
+    const totalRevenue = orders.reduce((acc, order) => acc + order.amount, 0);
+
+    // 4. Sales Trend (Line Chart - Last 7 Days) - FIXED VERSION
+    const salesData = await Order.aggregate([
+      {
+        // Step 1: Filter out any orders that don't have a date field
+        $match: { date: { $exists: true, $ne: null } }
+      },
+      {
+        // Step 2: Ensure 'date' is a Date object, even if stored as a Timestamp/String
+        $addFields: {
+          convertedDate: { $toDate: "$date" }
+        }
+      },
+      {
+        // Step 3: Now format and group
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$convertedDate" } },
+          revenue: { $sum: "$amount" }
+        }
+      },
+      { $sort: { "_id": 1 } },
+      { $limit: 7 }
+    ]);
+
+    const stats = {
+      totalProducts,
+      totalOrders,
+      totalRevenue,
+      categoryData,
+      salesData
+    };
+
+    // Use your ApiResponse class here
+    return res.status(200).json(
+      new ApiResponse(200, stats, "Stats fetched successfully")
+    );
+
+  } catch (error) {
+    console.log(error);
+    // Ensure you return a standard error format if stats fail
+    res.status(500).json({ success: false, message: error.message });
   }
 }
