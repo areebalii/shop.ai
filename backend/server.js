@@ -8,6 +8,7 @@ import productRouter from './routes/product.route.js'
 import cartRouter from './routes/cart.route.js'
 import orderRouter from './routes/order.route.js'
 import wishlistRouter from './routes/wishlist.route.js'
+import chatRouter from './routes/chatRoute.js'
 
 
 // App Config
@@ -29,6 +30,7 @@ app.use("/api/product", productRouter)
 app.use("/api/cart", cartRouter)
 app.use("/api/order", orderRouter)
 app.use('/api/wishlist', wishlistRouter)
+app.use('/api/chat', chatRouter)
 
 app.listen(port,()=>{
     console.log(`Server is running on port http://localhost:${port}`)
