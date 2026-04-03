@@ -4,16 +4,6 @@ import { assets } from '../assets/assets';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
-/*************  ✨ Windsurf Command 🌟  *************/
-/**
- * SearchBar Component
- * 
- * This component renders a search input and a side panel 
- * that displays search results. It also includes an AI 
- * powered suggestion section.
- * 
- * @returns {JSX.Element} The rendered SearchBar component
- */
 const SearchBar = () => {
   const { search, setSearch, showSearch, setShowSearch, products, currency } = useContext(ShopContext);
   const [resultItems, setResultItems] = useState([]);
@@ -21,9 +11,6 @@ const SearchBar = () => {
   const [loading, setLoading] = useState(false);
   const searchInputRef = useRef(null);
 
-  /**
-   * Auto-focus the input when the drawer slides in
-   */
   // Auto-focus the input when the drawer slides in
   useEffect(() => {
     if (showSearch) {
@@ -202,6 +189,5 @@ const SearchBar = () => {
     </>
   );
 };
-/*******  26470353-bdc5-4b1e-9d3b-037651820a38  *******/
 
 export default SearchBar;

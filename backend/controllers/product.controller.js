@@ -7,7 +7,7 @@ import Order from "../models/order.model.js";
 // function to add products
 export const addProduct = async (req, res) => {
   try {
-    const { name, description, price, category, subCategory, sizes, bestSeller } = req.body;
+    const { name, description, price, category, subCategory, sizes, bestSeller, discount } = req.body;
 
     const image1 = req.files.image1 && req.files.image1[0]
     const image2 = req.files.image2 && req.files.image2[0]
@@ -26,6 +26,7 @@ export const addProduct = async (req, res) => {
       name,
       description,
       price: Number(price),
+      discount: Number(discount) || 0,
       category,
       subCategory,
       sizes: JSON.parse(sizes),
@@ -195,57 +196,55 @@ export const deleteReview = async (req, res) => {
 
 export const updateProduct = async (req, res) => {
   try {
-    const { id, name, description, price, category, subCategory, sizes, bestSeller } = req.body;
+    const { id, name, description, price, category, subCategory, sizes, bestSeller, discount } = req.body;
 
     const product = await Product.findById(id);
     if (!product) {
       return res.json({ success: false, message: "Product not found" });
     }
 
-    // 1. Get existing images from the database
+    // 1. Handle Images Logic
     let currentImages = [...product.image];
-
-    // 2. Map through the 4 possible image slots
     const imageKeys = ['image1', 'image2', 'image3', 'image4'];
 
     for (let i = 0; i < imageKeys.length; i++) {
       const file = req.files[imageKeys[i]] && req.files[imageKeys[i]][0];
-
       if (file) {
-        // If a new file was uploaded for this slot, upload to Cloudinary
         const result = await cloudinary.uploader.upload(file.path, {
           resource_type: 'image',
           folder: "ecommerce/products"
         });
-
-        // Replace the specific index in the array
         currentImages[i] = result.secure_url;
       }
-      // If no file was uploaded for this slot, currentImages[i] remains as it was
     }
 
-    // 3. Clean up the array (remove any null/undefined if you want a tight array)
     const updatedImagesUrl = currentImages.filter(img => img !== null && img !== undefined);
 
-    const updateData = {
-      name,
-      description,
-      category,
-      price: Number(price),
-      subCategory,
-      bestSeller: bestSeller === "true" ? true : false,
-      sizes: JSON.parse(sizes),
-      image: updatedImagesUrl
-    };
+    // 2. Update Document Fields directly
+    product.name = name;
+    product.description = description;
+    product.category = category;
+    product.subCategory = subCategory;
+    product.price = Number(price);
 
-    await Product.findByIdAndUpdate(id, updateData);
+    // FIX: Ensure discount is a Number, not a Boolean
+    const parsedDiscount = Number(discount);
+    product.discount = isNaN(parsedDiscount) ? 0 : parsedDiscount;
+
+    product.bestSeller = bestSeller === "true" || bestSeller === true;
+    product.sizes = typeof sizes === 'string' ? JSON.parse(sizes) : sizes;
+    product.image = updatedImagesUrl;
+
+    // 3. IMPORTANT: .save() triggers the pre('save') middleware for calculations
+    await product.save();
 
     res.json({ success: true, message: "Product Updated Successfully" });
 
   } catch (error) {
+    console.error("Update Error:", error);
     res.json({ success: false, message: error.message });
   }
-}
+};
 
 export const getDashboardStats = async (req, res) => {
   try {

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home'
 import Collection from './pages/Collection'
@@ -16,8 +16,18 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Wishlist from './pages/Wishlist'
 import Chatbot from './components/Chatbot'
+import { ShopContext } from './context/ShopContext'
+import Loader from './components/Loader'
 
 const App = () => {
+
+  const { loading } = useContext(ShopContext)
+
+  if (loading) {
+    return <Loader />
+  }
+
+
   return (
     <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
       <ToastContainer />

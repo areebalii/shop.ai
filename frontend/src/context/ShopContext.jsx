@@ -9,7 +9,7 @@ export const ShopContext = createContext();
 
 const ShopContextProvider = (props) => {
 
-    const currency = '$';
+    const currency = 'Rs ';
     const delivery_fee = 10;
     const backendUrl = import.meta.env.VITE_BACKEND_URL
     const [search, setSearch] = useState('');
@@ -17,6 +17,7 @@ const ShopContextProvider = (props) => {
     const [cartItems, setCartItems] = useState({});
     const navigate = useNavigate();
     const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [wishlist, setWishlist] = useState([]);
     const [token, setToken] = useState('');
     const [userId, setUserId] = useState("");
@@ -88,19 +89,17 @@ const ShopContextProvider = (props) => {
         }
     }
 
+    // context/ShopContext.jsx
     const getCartAmount = () => {
         let totalAmount = 0;
         for (const items in cartItems) {
-            // Find the product info for the current item in cart
             let itemInfo = products.find((product) => product._id === items);
-
             for (const item in cartItems[items]) {
                 try {
-                    if (cartItems[items][item] > 0) {
-                        // ADD THIS CHECK: Only add to total if itemInfo was actually found
-                        if (itemInfo) {
-                            totalAmount += itemInfo.price * cartItems[items][item];
-                        }
+                    if (cartItems[items][item] > 0 && itemInfo) {
+                        // Use discountedPrice if available, else fallback to original price
+                        const priceToUse = itemInfo.discountedPrice || itemInfo.price;
+                        totalAmount += priceToUse * cartItems[items][item];
                     }
                 } catch (error) {
                     console.log(error);
@@ -112,6 +111,7 @@ const ShopContextProvider = (props) => {
 
     const getProductData = async () => {
         try {
+            setLoading(true);
             const response = await axios.get(backendUrl + '/api/product/list');
 
             if (response.data.success) {
@@ -122,6 +122,8 @@ const ShopContextProvider = (props) => {
         } catch (error) {
             console.error(error);
             toast.error(error.message);
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -169,6 +171,7 @@ const ShopContextProvider = (props) => {
             toast.error("Failed to update wishlist");
         }
     }
+
     const getUserWishlist = async (token) => {
         try {
             const response = await axios.post(backendUrl + '/api/wishlist/get', {}, { headers: { token } });
@@ -192,7 +195,7 @@ const ShopContextProvider = (props) => {
             getUserCart(storedToken);
             getUserWishlist(storedToken);
 
-            // --- NEW LOGIC: Decode token to get User ID ---
+            // LOGIC: Decode token to get User ID ---
             try {
                 const decoded = jwtDecode(storedToken);
                 setUserId(decoded.id); // Assuming your backend token payload has { id: "..." }
@@ -204,7 +207,7 @@ const ShopContextProvider = (props) => {
 
 
     const value = {
-        products, currency, delivery_fee,
+        products, loading, currency, delivery_fee,
         search, setSearch, showSearch, setShowSearch,
         cartItems, addToCart, setCartItems,
         getCartCount, updateQuantity,

@@ -9,24 +9,31 @@ const Add = ({ token, isEdit, editData, setShowEdit, fetchList }) => {
   const [image2, setImage2] = useState(false)
   const [image3, setImage3] = useState(false)
   const [image4, setImage4] = useState(false)
-
+  
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [discount, setDiscount] = useState(0);
   const [category, setCategory] = useState("Men");
   const [subCategory, setSubCategory] = useState("Topwear");
   const [bestSeller, setBestSeller] = useState(false);
   const [sizes, setSizes] = useState([]);
 
-  // Pre-fill form if in Edit Mode
   useEffect(() => {
     if (isEdit && editData) {
       setName(editData.name);
       setDescription(editData.description);
       setPrice(editData.price);
+
+      // Explicitly check for null/undefined to prevent UI resets
+      const savedDiscount = editData.discount !== undefined && editData.discount !== null
+        ? editData.discount
+        : 0;
+      setDiscount(savedDiscount);
+
       setCategory(editData.category);
       setSubCategory(editData.subCategory);
-      setBestSeller(editData.bestSeller || editData.bestseller); // Handle naming variations
+      setBestSeller(editData.bestSeller || editData.bestseller);
       setSizes(editData.sizes || []);
     }
   }, [isEdit, editData]);
@@ -44,6 +51,7 @@ const Add = ({ token, isEdit, editData, setShowEdit, fetchList }) => {
       formData.append("name", name);
       formData.append("description", description);
       formData.append("price", price);
+      formData.append("discount", Number(discount));
       formData.append("category", category);
       formData.append("subCategory", subCategory);
       formData.append("bestSeller", bestSeller);
@@ -73,6 +81,7 @@ const Add = ({ token, isEdit, editData, setShowEdit, fetchList }) => {
           setImage3(false);
           setImage4(false);
           setPrice('');
+          setDiscount(0);
           setSizes([]);
         }
       } else {
@@ -145,6 +154,16 @@ const Add = ({ token, isEdit, editData, setShowEdit, fetchList }) => {
         <div>
           <p className='mb-2'>Product Price</p>
           <input onChange={(e) => setPrice(e.target.value)} value={price} className='w-full sm:w-[120px] px-3 py-2 border rounded' type="Number" placeholder='25' required />
+        </div>
+        <div>
+          <p className='mb-2'>Discount (%)</p>
+          <input
+            onChange={(e) => setDiscount(e.target.value)}
+            value={discount}
+            className='w-full sm:w-[120px] px-3 py-2 border rounded border-orange-300 focus:border-orange-500 outline-none'
+            type="Number"
+            placeholder='13'
+          />
         </div>
       </div>
 
