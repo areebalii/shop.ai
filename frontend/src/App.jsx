@@ -29,10 +29,12 @@ const App = () => {
 
 
   return (
-    <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
+    <div className='overflow-x-hidden'>
       <ToastContainer />
-      <Navbar />
-      <SearchBar />
+      <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
+        <Navbar />
+        <SearchBar />
+      </div>
       <Routes>
         <Route path='/' element={<Home />} />
         <Route path='/collection' element={<Collection />} />

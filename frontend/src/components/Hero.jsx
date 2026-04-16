@@ -1,27 +1,30 @@
 import React from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Autoplay, Navigation } from "swiper/modules"; // Added Navigation
+import { Pagination, Autoplay, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
-import "swiper/css/navigation"; // Added Navigation CSS
+import "swiper/css/navigation";
 import { assets } from "../assets/assets";
 import "./Hero.css";
 
 const Hero = () => {
     return (
-        <div className="w-full overflow-hidden">
+        /* Ensure the outer container is truly screen-width and has no padding */
+        <div className="w-full relative overflow-hidden">
             <Swiper
                 modules={[Pagination, Autoplay, Navigation]}
                 pagination={{ clickable: true }}
                 navigation={true}
                 autoplay={{ delay: 4000, disableOnInteraction: false }}
                 loop
-                className="h-[80vh] md:h-[90vh] w-full"
+                // Removed constraints, set to full screen width
+                className="hero-swiper h-[60vh] md:h-[90vh] w-full"
             >
                 {/* Slide 1 */}
                 <SwiperSlide>
                     <div
-                        className="hero-slide w-full h-full flex items-center justify-start px-10 md:px-24"
+                        /* REMOVED px-10 md:px-24 to eliminate horizontal gaps */
+                        className="hero-slide w-full h-full flex items-center justify-start"
                         style={{
                             backgroundImage: `url(${assets.slider})`,
                             backgroundSize: "cover",
@@ -29,7 +32,8 @@ const Hero = () => {
                             backgroundRepeat: "no-repeat",
                         }}
                     >
-                        <div className="max-w-xl space-y-5">
+                        {/* Text Container: Add padding back HERE instead of the slide div */}
+                        <div className="max-w-xl space-y-5 pl-[6vw] md:pl-[10vw]">
                             <h1 className="text-red-500 text-5xl md:text-7xl font-bold font-serif leading-tight">
                                 Sale 20% Off
                             </h1>
@@ -46,10 +50,10 @@ const Hero = () => {
                     </div>
                 </SwiperSlide>
 
-                {/* Slide 2 */}
+                {/* Slide 2 (Same logic as Slide 1) */}
                 <SwiperSlide>
                     <div
-                        className="hero-slide w-full h-full flex items-center justify-start px-10 md:px-24"
+                        className="hero-slide w-full h-full flex items-center justify-start"
                         style={{
                             backgroundImage: `url(${assets.slider})`,
                             backgroundSize: "cover",
@@ -57,7 +61,7 @@ const Hero = () => {
                             backgroundRepeat: "no-repeat",
                         }}
                     >
-                        <div className="max-w-xl space-y-5">
+                        <div className="max-w-xl space-y-5 pl-[6vw] md:pl-[10vw]">
                             <h1 className="text-red-500 text-5xl md:text-7xl font-bold font-serif leading-tight">
                                 New Season
                             </h1>
@@ -78,11 +82,11 @@ const Hero = () => {
             <style dangerouslySetInnerHTML={{
                 __html: `
                 .swiper-button-next, .swiper-button-prev {
-                    color: #ff0000 !important;
-                    transform: scale(0.7);
+                    color: #ef4444 !important;
+                    transform: scale(0.6);
                 }
                 .swiper-pagination-bullet-active {
-                    background: #ff0000 !important;
+                    background: #ef4444 !important;
                 }
             `}} />
         </div>

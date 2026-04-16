@@ -2,79 +2,26 @@
   height: 90vh;
   display: flex;
   align-items: center;
-  padding: 0 6vw;
+  /* Removed padding from here so background is edge-to-edge */
+  padding: 0; 
   background-size: cover;
-  background-position: right center;
+  /* Use 'center center' to ensure the model stays visible on wide screens */
+  background-position: center center;
   background-repeat: no-repeat;
+  width: 100%;
 }
 
-/* Mobile */
+/* Ensure the Swiper container has no default padding */
+.hero-swiper {
+  width: 100vw !important;
+  margin-left: calc(-50vw + 50%);
+  margin-right: calc(-50vw + 50%);
+}
+
+/* Mobile Adjustments */
 @media (max-width: 768px) {
   .hero-slide {
     height: 60vh;
-    padding: 0 20px;
     background-position: center;
-  }
-
-  .hero-slide h1 {
-    font-size: 25px;
-  }
-
-  .hero-slide h2 {
-    font-size: 27px;
-  }
-
-  .hero-slide p {
-    font-size: 14px;
-  }
-}
-
-/* Move pagination to bottom-left */
-.hero-swiper .swiper-pagination {
-  text-align: left;
-  padding-left: 75px;
-  bottom: 40px !important;
-}
-
-/* Default dot */
-.hero-swiper .swiper-pagination-bullet {
-  background: #d1d5db; /* gray-300 */
-  opacity: 1;
-  width: 15px;
-  height: 15px;
-  margin: 0 6px !important;
-}
-
-/* Active dot */
-.hero-swiper .swiper-pagination-bullet-active {
-  background: #ef4444; /* red-500 */
-}
-
-/* ===== Tablet ===== */
-@media (max-width: 1024px) {
-  .hero-swiper .swiper-pagination {
-    padding-left: 50px;
-    bottom: 30px !important;
-  }
-
-  .hero-swiper .swiper-pagination-bullet {
-    width: 12px;
-    height: 12px;
-  }
-}
-
-
-/* ===== Mobile ===== */
-@media (max-width: 768px) {
-  .hero-swiper .swiper-pagination {
-
-    padding-left: 18px;
-    bottom: 35% !important;
-  }
-
-  .hero-swiper .swiper-pagination-bullet {
-    width: 10px;
-    height: 10px;
-    margin: 0 4px !important;
   }
 }

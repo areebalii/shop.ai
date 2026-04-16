@@ -1,192 +1,113 @@
-import React, { useContext, useEffect, useState, useRef } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { ShopContext } from '../context/ShopContext';
 import { assets } from '../assets/assets';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
 
 const SearchBar = () => {
   const { search, setSearch, showSearch, setShowSearch, products, currency } = useContext(ShopContext);
   const [resultItems, setResultItems] = useState([]);
-  const [aiTip, setAiTip] = useState("");
-  const [loading, setLoading] = useState(false);
-  const searchInputRef = useRef(null);
 
-  // Auto-focus the input when the drawer slides in
   useEffect(() => {
-    if (showSearch) {
-      setTimeout(() => searchInputRef.current?.focus(), 400);
+    if (showSearch && search.trim().length > 0) {
+      const filtered = products.filter(item =>
+        item.name.toLowerCase().includes(search.toLowerCase()) ||
+        item.category.toLowerCase().includes(search.toLowerCase())
+      );
+      setResultItems(filtered.slice(0, 4));
+    } else {
+      setResultItems([]);
     }
-  }, [showSearch]);
+  }, [search, showSearch, products]);
 
-
-  useEffect(() => {
-    const getGlobalResults = async () => {
-      const query = search.trim().toLowerCase();
-      if (query.length > 1) {
-        setLoading(true);
-
-        // 1. DYNAMIC EXTRACTION (Price, Category, Color)
-        const priceMatch = query.match(/\d+/);
-        const priceLimit = priceMatch ? parseInt(priceMatch[0]) : null;
-        const isUnder = query.includes("under") || query.includes("below") || query.includes("<");
-        const isOver = query.includes("above") || query.includes("over") || query.includes(">");
-
-        // 2. MULTI-LAYERED FILTERING
-        let filtered = products.filter(item => {
-          const name = item.name.toLowerCase();
-          const cat = item.category.toLowerCase();
-          const subCat = item.subCategory.toLowerCase();
-
-          // Keyword Match (Name, Category, or Sub-Category)
-          const matchesKeyword = name.includes(query) || cat.includes(query) || subCat.includes(query);
-
-          // Price Logic
-          let matchesPrice = true;
-          if (priceLimit) {
-            if (isUnder) matchesPrice = item.price <= priceLimit;
-            if (isOver) matchesPrice = item.price >= priceLimit;
-          }
-
-          // Return true only if it passes all active constraints
-          return matchesKeyword && matchesPrice;
-        });
-
-        try {
-          // 3. AI SEMANTIC LAYER (Groq)
-          // We ask the AI to find products that "feel" like the search even if the names don't match
-          const res = await axios.post('http://localhost:3000/api/chat/ask', {
-            message: `User Query: "${search}". 
-          Available Inventory: ${products.map(p => p.name).join(", ")}.
-          Identify which 3 products best fit this intent and provide a luxury style tip.`
-          });
-
-          const aiResponse = res.data.reply;
-          setAiTip(aiResponse);
-
-          // 4. CROSS-REFERENCE AI MENTIONS WITH REAL DATA
-          const aiSuggested = products.filter(p => {
-            const isMentioned = aiResponse.toLowerCase().includes(p.name.toLowerCase());
-            // Ensure AI suggestions also respect the user's price limit
-            if (priceLimit && isUnder) return isMentioned && p.price <= priceLimit;
-            if (priceLimit && isOver) return isMentioned && p.price >= priceLimit;
-            return isMentioned;
-          });
-
-          // 5. MERGE & DEDUPLICATE
-          const finalResults = [...new Map([...filtered, ...aiSuggested].map(item => [item._id, item])).values()];
-          setResultItems(finalResults.slice(0, 6));
-
-        } catch (e) {
-          setResultItems(filtered.slice(0, 6));
-        }
-        setLoading(false);
-      } else {
-        setResultItems([]);
-        setAiTip("");
-      }
-    };
-
-    const timer = setTimeout(getGlobalResults, 400);
-    return () => clearTimeout(timer);
-  }, [search, products]);
+  if (!showSearch) return null;
 
   return (
-    <>
-      {/* Backdrop Blur Layer */}
+    <div className='fixed inset-0 z-[1000] flex items-start justify-center pt-[10vh] px-4'>
+      {/* Backdrop Blur */}
       <div
         onClick={() => setShowSearch(false)}
-        className={`fixed inset-0 bg-black/20 backdrop-blur-sm z-[999] transition-opacity duration-500 ${showSearch ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
+        className='absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-fadeIn'
       ></div>
 
-      {/* --- SIDE SEARCH PANEL --- */}
-      <div className={`fixed top-0 right-0 h-full w-full sm:w-[450px] bg-white z-[1000] shadow-2xl transform transition-transform duration-500 ease-in-out ${showSearch ? 'translate-x-0' : 'translate-x-full'}`}>
+      {/* Main Search Modal */}
+      <div className='bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden z-[1001] animate-slideUp'>
 
-        <div className='flex flex-col h-full p-8'>
+        {/* Search Input Area */}
+        <div className='flex items-center px-6 py-5 border-b border-gray-100'>
+          <img src={assets.search_icon} className='w-5 opacity-40' alt="" />
+          <input
+            autoFocus
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className='flex-1 bg-transparent border-none outline-none px-4 text-lg font-medium text-gray-800 placeholder:text-gray-300'
+            type="text"
+            placeholder='Search collection...'
+          />
+          <kbd className='hidden sm:inline-block px-2 py-1 text-[10px] font-bold text-gray-400 border border-gray-200 rounded-md shadow-sm'>ESC</kbd>
+        </div>
 
-          {/* Header */}
-          <div className='flex justify-between items-center mb-10'>
-            <p className='text-xs font-black uppercase tracking-[0.4em] text-slate-400'>Search WearWell</p>
-            <button onClick={() => setShowSearch(false)} className='p-2 hover:bg-slate-50 rounded-full transition-colors'>
-              <img src={assets.cross_icon} className='w-3' alt="" />
-            </button>
-          </div>
+        <div className='flex flex-col md:flex-row min-h-[300px]'>
 
-          {/* Search Input Container */}
-          <div className='relative group mb-6'>
-            <input
-              ref={searchInputRef}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search collection..."
-              className='w-full text-2xl font-light border-b border-slate-100 py-3 outline-none focus:border-black transition-all placeholder:text-slate-200'
-            />
-            {loading && <div className='absolute right-0 top-4 w-4 h-4 border-2 border-slate-200 border-t-black rounded-full animate-spin'></div>}
-          </div>
-
-          {/* AI Insight Section */}
-          <div className={`transition-all duration-500 overflow-hidden ${aiTip ? 'max-h-32 mb-4' : 'max-h-0'}`}>
-            <div className='bg-slate-50 p-3 rounded-lg border border-slate-100'>
-              <p className='text-[10px] inline-block bg-slate-900 text-white px-2 py-0.5 rounded font-bold uppercase mb-2'>
-                AI Suggestion
-              </p>
-              <p className='text-xs italic text-slate-600 leading-relaxed max-h-20 overflow-y-auto custom-scrollbar'>
-                "{aiTip}"
-              </p>
+          {/* Left Side: Category Quick Links */}
+          <div className='w-full md:w-48 bg-gray-50 p-6 border-r border-gray-100'>
+            <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4'>Categories</p>
+            <div className='flex flex-row md:flex-col gap-2'>
+              {['Men', 'Women', 'Kids'].map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSearch(cat)}
+                  className={`text-left px-3 py-2 rounded-xl text-sm font-semibold transition-all ${search.toLowerCase() === cat.toLowerCase() ? 'bg-black text-white' : 'text-gray-500 hover:bg-gray-200'}`}
+                >
+                  {cat}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Results Area */}
-          <div className='flex-1 overflow-y-auto mt-6 custom-scrollbar'>
-            {resultItems.length > 0 ? (
-              <div className='space-y-6'>
-                {resultItems.map((item, index) => (
+          {/* Right Side: Results */}
+          <div className='flex-1 p-6'>
+            <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4'>
+              {resultItems.length > 0 ? 'Top Suggestions' : 'Trending Now'}
+            </p>
+
+            <div className='space-y-3'>
+              {resultItems.length > 0 ? (
+                resultItems.map((item) => (
                   <Link
                     key={item._id}
                     to={`/product/${item._id}`}
-                    onClick={() => setShowSearch(false)}
-                    className='flex gap-4 group animate-in slide-in-from-right-4 fill-mode-both'
-                    style={{ animationDelay: `${index * 50}ms` }}
+                    onClick={() => { setShowSearch(false); setSearch(''); }}
+                    className='flex items-center gap-4 p-2 rounded-2xl hover:bg-gray-50 transition-all group'
                   >
-                    <div className='w-20 h-24 bg-slate-50 rounded-lg overflow-hidden flex-shrink-0'>
-                      <img src={item.image[0]} className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500' alt="" />
+                    <div className='w-12 h-14 rounded-xl overflow-hidden bg-gray-100'>
+                      <img src={item.image[0]} className='w-full h-full object-cover group-hover:scale-110 transition-transform' alt="" />
                     </div>
-                    <div className='flex flex-col justify-center'>
-                      <p className='text-sm font-bold text-slate-800 group-hover:text-black transition-colors'>{item.name}</p>
-                      <p className='text-sm font-medium text-slate-400'>{currency}{item.price}</p>
-                      <p className='text-[10px] uppercase tracking-tighter text-slate-300 mt-1'>{item.category}</p>
+                    <div>
+                      <p className='text-sm font-bold text-gray-800'>{item.name}</p>
+                      <p className='text-xs text-gray-400'>{currency}{item.price}</p>
                     </div>
                   </Link>
-                ))}
-              </div>
-            ) : (
-              <div className='mt-10'>
-                <p className='text-[10px] font-bold uppercase text-slate-400 mb-4'>Popular Categories</p>
-                <div className='flex flex-wrap gap-2'>
-                  {['Men', 'Women', 'Winterwear', 'Topwear'].map(tag => (
-                    <button
-                      key={tag}
-                      onClick={() => setSearch(tag)}
-                      className='px-4 py-2 border border-slate-100 rounded-lg text-xs font-bold hover:bg-black hover:text-white transition-all'
-                    >
-                      {tag}
-                    </button>
-                  ))}
+                ))
+              ) : (
+                <div className='py-10 text-center'>
+                  <p className='text-sm text-gray-300'>Try searching for "Winterwear" or "Latest"</p>
                 </div>
-              </div>
+              )}
+            </div>
+
+            {resultItems.length > 0 && (
+              <Link
+                to='/collection'
+                onClick={() => setShowSearch(false)}
+                className='mt-6 block text-center py-3 rounded-xl bg-gray-900 text-white text-[11px] font-bold uppercase tracking-widest hover:bg-black transition-colors'
+              >
+                View full results
+              </Link>
             )}
           </div>
-
-          {/* Bottom Link */}
-          <Link
-            to='/collection'
-            onClick={() => setShowSearch(false)}
-            className='mt-6 py-4 bg-slate-900 text-white text-center text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-colors'
-          >
-            View Full Collection
-          </Link>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

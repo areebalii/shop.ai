@@ -11,6 +11,10 @@ const Collection = () => {
   const [subCategory, setSubCategory] = useState([]);
   const [sortType, setSortType] = useState('relevant');
 
+  // --- PAGINATION STATE ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const productsPerPage = 16; // Number of cards per page
+
   const toggleCategory = (e) => {
     const value = e.target.value;
     setCategory(prev => prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]);
@@ -36,7 +40,6 @@ const Collection = () => {
 
     switch (sortType) {
       case 'low-high':
-        // Sorts based on the price the user actually pays (discounted or original)
         temp.sort((a, b) => (a.discountedPrice || a.price) - (b.discountedPrice || b.price));
         break;
       case 'high-low':
@@ -46,11 +49,22 @@ const Collection = () => {
         break;
     }
     setFilterProducts(temp);
+    setCurrentPage(1); // Reset to page 1 whenever filters change
   };
 
   useEffect(() => {
     filterAndSort();
   }, [category, subCategory, search, showSearch, products, sortType]);
+
+  // --- PAGINATION CALCULATIONS ---
+  const indexOfLastProduct = currentPage * productsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+  const currentItems = filterProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+  const totalPages = Math.ceil(filterProducts.length / productsPerPage);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className='pt-10 border-t border-gray-100 bg-white min-h-screen px-4 sm:px-[5vw]'>
@@ -101,9 +115,9 @@ const Collection = () => {
         </div>
       </div>
 
-      {/* Grid Display */}
-      <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-12'>
-        {filterProducts.map((item) => (
+      {/* Grid Display - Now mapping currentItems instead of filterProducts */}
+      <div className='grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-12'>
+        {currentItems.map((item) => (
           <ProductItem
             key={item._id}
             id={item._id}
@@ -116,6 +130,39 @@ const Collection = () => {
           />
         ))}
       </div>
+
+      {/* --- PAGINATION CONTROLS --- */}
+      {totalPages > 1 && (
+        <div className='flex justify-center items-center gap-3 mt-20 mb-10'>
+          <button
+            onClick={() => { setCurrentPage(prev => Math.max(prev - 1, 1)); scrollToTop(); }}
+            disabled={currentPage === 1}
+            className='px-4 py-2 border border-gray-300 rounded-md text-sm font-medium hover:bg-black hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed'
+          >
+            Previous
+          </button>
+
+          <div className='flex gap-2'>
+            {[...Array(totalPages)].map((_, index) => (
+              <button
+                key={index + 1}
+                onClick={() => { setCurrentPage(index + 1); scrollToTop(); }}
+                className={`w-10 h-10 flex items-center justify-center border rounded-md text-sm font-bold transition-all ${currentPage === index + 1 ? 'bg-black text-white border-black' : 'border-gray-200 hover:border-black'}`}
+              >
+                {index + 1}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => { setCurrentPage(prev => Math.min(prev + 1, totalPages)); scrollToTop(); }}
+            disabled={currentPage === totalPages}
+            className='px-4 py-2 border border-gray-300 rounded-md text-sm font-medium hover:bg-black hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed'
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };
