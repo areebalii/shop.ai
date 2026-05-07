@@ -8,7 +8,7 @@ const Orders = () => {
   const { backendUrl, token, currency } = useContext(ShopContext);
   const [orderData, setOrderData] = useState([]);
 
-const loadOrderData = async () => {
+  const loadOrderData = async () => {
     try {
       if (!token) return null;
 
@@ -17,27 +17,23 @@ const loadOrderData = async () => {
       if (response.data.success) {
         let allOrdersItem = [];
 
-        response.data.orders.forEach((order) => {
-          // Based on your DB log, items[0] contains the actual product array
-          if (Array.isArray(order.items) && Array.isArray(order.items[0])) {
-            
-            // Loop through the inner array which contains the product objects
-            order.items[0].forEach((item) => {
-              // Ensure we are looking at a product object (has an _id and name)
-              if (item && typeof item === 'object' && item._id) {
-                allOrdersItem.push({
-                  ...item,
-                  status: order.status,
-                  paymentMethod: order.paymentMethod,
-                  payment: order.payment,
-                  date: order.date
-                });
-              }
+        response.data.orders.map((order) => {
+          // Determine if items is a nested array or a flat array
+          const itemsToMap = Array.isArray(order.items[0]) ? order.items[0] : order.items;
+
+          itemsToMap.map((item) => {
+            // Inject order-level details into the item object
+            allOrdersItem.push({
+              ...item,
+              status: order.status,
+              paymentMethod: order.paymentMethod,
+              payment: order.payment,
+              date: order.date
             });
-          }
+          });
         });
 
-        // Set state and reverse to show newest first
+        // reverse() shows the most recent orders at the top
         setOrderData(allOrdersItem.reverse());
       }
     } catch (error) {

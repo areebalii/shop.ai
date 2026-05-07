@@ -1,67 +1,85 @@
-import Order from "../models/order.model.js";
-import User from "../models/user.model.js";
+import orderModel from "../models/order.model.js";
+import userModel from "../models/user.model.js";
+import { v2 as cloudinary } from "cloudinary";
 
-// place order using COD method
+// Global Place Order (Handles COD, EasyPaisa, JazzCash)
 export const placeOrder = async (req, res) => {
   try {
-    const { userId, items, amount, address } = req.body;
+    const { userId, items, amount, address, paymentMethod } = req.body;
+    const screenshotFile = req.file; // From Multer
+
+    // 1. Parse data (If coming from Frontend FormData as strings)
+    const parsedItems = typeof items === 'string' ? JSON.parse(items) : items;
+    const parsedAddress = typeof address === 'string' ? JSON.parse(address) : address;
+
+    let screenshotUrl = "";
+
+    // 2. If it's a digital payment, upload the screenshot
+    if (screenshotFile) {
+      const uploadResponse = await cloudinary.uploader.upload(screenshotFile.path, {
+        resource_type: "image",
+        folder: "payment_screenshots"
+      });
+      screenshotUrl = uploadResponse.secure_url;
+    }
+
     const orderData = {
       userId,
-      items,
-      address,
-      amount,
-      paymentMethod: "COD",
-      payment: false,
-      date: new Date(),
-    }
-    const newOrder = new Order(orderData);
+      items: parsedItems,
+      address: parsedAddress,
+      amount: Number(amount),
+      paymentMethod,
+      payment: false, // Always false until admin verifies
+      paymentScreenshot: screenshotUrl,
+      date: Date.now(),
+    };
+
+    const newOrder = new orderModel(orderData);
     await newOrder.save();
-    await User.findByIdAndUpdate(userId, { cartData: {} })
-    res.status(200).json({ success: true, message: "Order placed successfully" });
+
+    // Clear user cart
+    await userModel.findByIdAndUpdate(userId, { cartData: {} });
+
+    res.status(200).json({ success: true, message: "Order placed successfully. Awaiting verification." });
 
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Something went wrong" });
+    res.status(500).json({ success: false, message: error.message });
   }
 }
 
-// place order using stripe method
-export const placeOrderStripe = async (req, res) => { }
-
-// place order using razorPay method
-export const placeOrderRazorPay = async (req, res) => { }
-
-// all order data for admin panel
 export const allOrders = async (req, res) => {
   try {
-    const orders = await Order.find().populate("userId", "name email");
+    const orders = await orderModel.find({});
     res.status(200).json({ success: true, orders });
   } catch (error) {
     console.log(error);
     res.status(500).json({ success: false, message: error.message });
   }
- }
+}
 
-// all data for frontend
 export const userOrders = async (req, res) => {
   try {
     const { userId } = req.body;
-    const orders = await Order.find({ userId })
+    const orders = await orderModel.find({ userId });
     res.status(200).json({ success: true, orders });
   } catch (error) {
-      console.log(error);
-      res.status(500).json({ success: false, message: error.message });
+    console.log(error);
+    res.status(500).json({ success: false, message: error.message });
   }
 }
 
-// update order status from admin panel
-export const updateStatus = async (req, res) => { 
+export const updateStatus = async (req, res) => {
   try {
-    const { orderId, status } = req.body;
-    const updatedOrder = await Order.findByIdAndUpdate(orderId, { status }, { new: true });
-    res.status(200).json({ success: true, updatedOrder });
+    const { orderId, status, payment } = req.body;
+    // This allows updating either status, payment, or both
+    const updateData = {};
+    if (status) updateData.status = status;
+    if (payment !== undefined) updateData.payment = payment;
+
+    await orderModel.findByIdAndUpdate(orderId, updateData);
+    res.status(200).json({ success: true, message: "Updated Successfully" });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ success: false, message: error.message });
   }
 }
