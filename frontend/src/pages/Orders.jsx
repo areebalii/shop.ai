@@ -18,22 +18,19 @@ const Orders = () => {
         let allOrdersItem = [];
 
         response.data.orders.map((order) => {
-          // Determine if items is a nested array or a flat array
           const itemsToMap = Array.isArray(order.items[0]) ? order.items[0] : order.items;
 
           itemsToMap.map((item) => {
-            // Inject order-level details into the item object
             allOrdersItem.push({
               ...item,
               status: order.status,
               paymentMethod: order.paymentMethod,
-              payment: order.payment,
+              payment: order.payment, // This is the boolean from your database
               date: order.date
             });
           });
         });
 
-        // reverse() shows the most recent orders at the top
         setOrderData(allOrdersItem.reverse());
       }
     } catch (error) {
@@ -46,7 +43,7 @@ const Orders = () => {
   }, [token])
 
   return (
-    <div className='border-t pt-16'>
+    <div className='border-t pt-16 px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
       <div className='text-2xl'>
         <Title text1={'MY'} text2={'ORDERS'} />
       </div>
@@ -55,32 +52,43 @@ const Orders = () => {
         {
           orderData.length > 0 ? (
             orderData.map((item, index) => (
-              <div key={index} className='py-4 border-t border-b text-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
-                
+              <div key={index} className='py-6 border-t border-b text-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
+
                 {/* --- Left Section: Image and Product Details --- */}
                 <div className='flex items-start gap-6 text-sm'>
-                  <img className='w-16 sm:w-20 rounded shadow-sm' src={item.image?.[0]} alt={item.name} />
+                  <img className='w-16 sm:w-20 rounded shadow-sm object-cover' src={item.image?.[0]} alt={item.name} />
                   <div>
                     <p className='sm:text-base font-medium'>{item.name}</p>
                     <div className='flex items-center gap-3 mt-1 text-base text-gray-700'>
-                      <p>{currency}{item.price}</p>
-                      <p>Qty: {item.quantity}</p>
-                      <p className='px-2 border bg-slate-50'>Size: {item.size}</p>
+                      <p className='font-bold'>{currency}{item.price}</p>
+                      <p className='text-sm text-gray-500'>Qty: {item.quantity}</p>
+                      <p className='px-2 text-xs border bg-slate-50 rounded'>Size: {item.size}</p>
                     </div>
-                    <p className='mt-1'>Date: <span className='text-gray-400'>{new Date(item.date).toDateString()}</span></p>
-                    <p className='mt-1'>Payment: <span className='text-gray-400'>{item.paymentMethod}</span></p>
+                    <p className='mt-2 text-xs text-gray-500'>Date: <span className='text-gray-400'>{new Date(item.date).toDateString()}</span></p>
+
+                    {/* PAYMENT STATUS LOGIC */}
+                    <div className='flex items-center gap-2 mt-2'>
+                      <p className='text-xs text-gray-500'>Payment:</p>
+                      <span className='font-bold uppercase text-[10px] tracking-wider'>{item.paymentMethod}</span>
+
+                      {item.paymentMethod !== 'COD' && (
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${item.payment ? 'bg-green-100 text-green-600' : 'bg-red-50 text-red-500 border border-red-100'}`}>
+                          {item.payment ? '✓ Verified' : '⚠ Pending / Declined'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 {/* --- Right Section: Status and Action --- */}
                 <div className='md:w-1/2 flex justify-between items-center'>
                   <div className='flex items-center gap-2'>
-                    <p className={`min-w-2.5 h-2.5 rounded-full ${item.status === 'Delivered' ? 'bg-green-500' : 'bg-orange-400'}`}></p>
-                    <p className='text-sm md:text-base font-medium capitalize'>{item.status}</p>
+                    <p className={`min-w-2.5 h-2.5 rounded-full ${item.status === 'Delivered' ? 'bg-green-500' : 'bg-orange-400 animate-pulse'}`}></p>
+                    <p className='text-sm md:text-base font-semibold capitalize'>{item.status}</p>
                   </div>
                   <button
                     onClick={loadOrderData}
-                    className='border border-gray-300 px-4 py-2 text-sm font-medium rounded-md hover:bg-black hover:text-white transition-all duration-300'
+                    className='border border-gray-300 px-6 py-2 text-xs font-bold uppercase tracking-widest rounded-sm hover:bg-black hover:text-white transition-all duration-300 active:scale-95'
                   >
                     Track Order
                   </button>
@@ -90,7 +98,7 @@ const Orders = () => {
             ))
           ) : (
             <div className='text-center py-20 text-gray-400'>
-              <p>You haven't placed any orders yet.</p>
+              <p className='text-lg'>You haven't placed any orders yet.</p>
             </div>
           )
         }
