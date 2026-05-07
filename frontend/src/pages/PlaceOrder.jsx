@@ -21,7 +21,6 @@ const PlaceOrder = () => {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  // Primary function to handle the API call
   const initateOrder = async (currentImage = image) => {
     try {
       const orderItems = []
@@ -44,7 +43,6 @@ const PlaceOrder = () => {
       orderData.append('amount', getCartAmount() + delivery_fee);
       orderData.append('paymentMethod', method);
 
-      // Explicitly append the image if it exists
       if (currentImage) {
         orderData.append('paymentScreenshot', currentImage);
       }
@@ -66,23 +64,17 @@ const PlaceOrder = () => {
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
-
-    // 1. If COD, just place order
     if (method === 'cod') {
       await initateOrder();
-    }
-    // 2. If Digital but no image, show popup
-    else if (!image) {
+    } else if (!image) {
       setShowPopup(true);
-    }
-    // 3. If Digital and image already exists, place order
-    else {
+    } else {
       await initateOrder();
     }
   }
 
   return (
-    <form onSubmit={onSubmitHandler} className='flex flex-col sm:flex-row justify-between gap-8 pt-5 sm:pt-14 min-h-[80vh] border-t' >
+    <form onSubmit={onSubmitHandler} className='flex flex-col sm:flex-row justify-between gap-8 pt-5 sm:pt-14 min-h-[80vh] border-t px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]' >
 
       {/* Left Side: Delivery Info */}
       <div className='flex flex-col gap-4 w-full sm:max-w-[480px]'>
@@ -108,7 +100,7 @@ const PlaceOrder = () => {
 
       {/* Right Side: Payment */}
       <div className='mt-8 w-full sm:max-w-[500px]'>
-        <div className='min-w-80'>
+        <div className='w-full'>
           <CartTotal />
         </div>
 
@@ -116,25 +108,21 @@ const PlaceOrder = () => {
           <Title text1={"PAYMENT"} text2={'METHOD'} />
           <div className='flex gap-3 flex-col lg:flex-row'>
 
-            {/* EasyPaisa Selector */}
-            <div onClick={() => setMethod('easypaisa')} className={`flex items-center gap-3 border p-3 px-4 cursor-pointer rounded-lg transition-all ${method === 'easypaisa' ? 'border-green-500 bg-green-50' : 'hover:bg-gray-50'}`}>
+            <div onClick={() => setMethod('easypaisa')} className={`flex items-center gap-3 border p-3 px-4 cursor-pointer rounded-lg transition-all ${method === 'easypaisa' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:bg-gray-50'}`}>
               <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'easypaisa' ? 'bg-green-500 border-green-500' : 'border-gray-300'}`}></p>
-              {assets.easypaisa_logo && <img className='h-5 mx-2' src={assets.easypaisa_logo} alt="EasyPaisa" />}
-              <p className='text-gray-600 text-xs font-semibold uppercase'>EasyPaisa</p>
+              <img className='h-5 w-auto mx-2 object-contain' src={assets.easypaisa_logo} alt="EasyPaisa" />
             </div>
 
-            {/* JazzCash Selector */}
-            <div onClick={() => setMethod('jazzcash')} className={`flex items-center gap-3 border p-3 px-4 cursor-pointer rounded-lg transition-all ${method === 'jazzcash' ? 'border-amber-500 bg-amber-50' : 'hover:bg-gray-50'}`}>
+            <div onClick={() => setMethod('jazzcash')} className={`flex items-center gap-3 border p-3 px-4 cursor-pointer rounded-lg transition-all ${method === 'jazzcash' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:bg-gray-50'}`}>
               <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'jazzcash' ? 'bg-amber-500 border-amber-500' : 'border-gray-300'}`}></p>
-              {assets.jazzcash_logo && <img className='h-5 mx-2' src={assets.jazzcash_logo} alt="JazzCash" />}
-              <p className='text-gray-600 text-xs font-semibold uppercase'>JazzCash</p>
+              <img className='h-5 w-auto mx-2 object-contain' src={assets.jazzcash_logo} alt="JazzCash" />
             </div>
 
-            {/* COD Selector */}
-            <div onClick={() => { setMethod('cod'); setImage(false) }} className={`flex items-center gap-3 border p-3 px-4 cursor-pointer rounded-lg transition-all ${method === 'cod' ? 'border-gray-800 bg-gray-50' : 'border-gray-300 hover:bg-gray-50'}`}>
+            <div onClick={() => { setMethod('cod'); setImage(false) }} className={`flex items-center gap-3 border p-3 px-4 cursor-pointer rounded-lg transition-all ${method === 'cod' ? 'border-gray-800 bg-gray-50' : 'border-gray-200 hover:bg-gray-50'}`}>
               <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'cod' ? 'bg-gray-800 border-gray-800' : 'border-gray-300'}`}></p>
-              <p className='text-gray-500 text-xs font-semibold mx-2 uppercase'>Cash on Delivery</p>
+              <p className='text-gray-500 text-xs font-bold mx-4 uppercase tracking-widest'>Cash on Delivery</p>
             </div>
+
           </div>
 
           <div className='w-full text-end mt-8'>
@@ -150,7 +138,6 @@ const PlaceOrder = () => {
         <div className='fixed inset-0 bg-black/70 backdrop-blur-md z-[1000] flex items-center justify-center p-4'>
           <div className='bg-white w-full max-w-md overflow-hidden rounded-2xl shadow-2xl animate-in fade-in zoom-in duration-300'>
 
-            {/* Modal Header */}
             <div className={`p-6 text-white flex justify-between items-center ${method === 'easypaisa' ? 'bg-green-600' : 'bg-amber-500'}`}>
               <div className='flex items-center gap-3'>
                 <h2 className='text-lg font-bold uppercase tracking-tighter'>Manual Payment</h2>
@@ -163,9 +150,9 @@ const PlaceOrder = () => {
                 <div className='flex justify-between items-center border-b border-gray-200 pb-3'>
                   <div>
                     <p className='text-[10px] text-gray-400 font-bold uppercase'>Account Number</p>
-                    <p className='text-lg font-mono font-bold text-gray-800 tracking-wider'>03XX-XXXXXXX</p>
+                    <p className='text-lg font-mono font-bold text-gray-800 tracking-wider'>0307 8467479</p>
                   </div>
-                  <button type='button' onClick={() => { navigator.clipboard.writeText("03XXXXXXXXX"); toast.info("Number Copied") }} className='text-blue-600 text-xs font-bold'>COPY</button>
+                  <button type='button' onClick={() => { navigator.clipboard.writeText("03078467479"); toast.info("Number Copied") }} className='text-blue-600 text-xs font-bold'>COPY</button>
                 </div>
                 <div>
                   <p className='text-[10px] text-gray-400 font-bold uppercase'>Account Title</p>

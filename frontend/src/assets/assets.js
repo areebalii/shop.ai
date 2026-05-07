@@ -1,19 +1,3 @@
-import p_img1 from './p_img1.png'
-import p_img2_1 from './p_img2_1.png'
-import p_img2_2 from './p_img2_2.png'
-import p_img2_3 from './p_img2_3.png'
-import p_img2_4 from './p_img2_4.png'
-import p_img3 from './p_img3.png'
-import p_img4 from './p_img4.png'
-import p_img5 from './p_img5.png'
-import p_img6 from './p_img6.png'
-import p_img7 from './p_img7.png'
-import p_img8 from './p_img8.png'
-import p_img9 from './p_img9.png'
-import p_img10 from './p_img10.png'
-import p_img11 from './p_img11.png'
-import p_img12 from './p_img12.png'
-import p_img13 from './p_img13.png'
 import p_img14 from './p_img14.png'
 import p_img15 from './p_img15.png'
 import p_img16 from './p_img16.png'
@@ -75,6 +59,8 @@ import razorpay_logo from './razorpay_logo.png'
 import stripe_logo from './stripe_logo.png'
 import cross_icon from './cross_icon.png'
 import slider from './slider.png'
+import easypaisa_logo from './easypaisa_logo.png'
+import jazzcash_logo from './jazzcash_logo.png'
 
 export const assets = {
     logo,
@@ -96,7 +82,9 @@ export const assets = {
     razorpay_logo,
     stripe_logo,
     cross_icon,
-    slider
+    slider,
+    easypaisa_logo,
+    jazzcash_logo
 }
 
 export const products = [
