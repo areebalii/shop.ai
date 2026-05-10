@@ -58,7 +58,6 @@ Thumbs.db
 *.swo
 
 # MongoDB data (if stored locally)
-data/
 *.db
 
 # Uploads (if using file upload)
