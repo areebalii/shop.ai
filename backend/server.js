@@ -25,7 +25,7 @@ connectCloudinary()
 app.use(express.json())
 // app.use(cors())
 app.use(cors({
-    origin: 'https://shop-ai-ui.vercel.app/'
+    origin: 'https://shop-ai-ui.vercel.app'
 }));
 
 // api endpoints
