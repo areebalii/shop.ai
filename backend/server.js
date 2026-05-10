@@ -34,6 +34,10 @@ app.use('/api/wishlist', wishlistRouter)
 // app.use('/api/chat', chatRouter)
 app.use('/api/chatbot', chatbot)
 
+app.get('/', (req, res) => {
+    res.send('API is running!')
+})
+
 app.listen(port,()=>{
     console.log(`Server is running on port http://localhost:${port}`)
 })
