@@ -24,10 +24,26 @@ connectCloudinary()
 // middlewares
 app.use(express.json())
 // app.use(cors())
-app.use(cors({
-    origin: 'https://shop-ai-ui.vercel.app'
-}));
+const allowedOrigins = [
+    'https://shop-ai-ui.vercel.app', 
+    'http://localhost:5173',
+    'http://localhost:5174',        
+    'http://localhost:3000'          
+];
 
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps, curl, or Postman)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
+    credentials: true // Add this if you plan on using cookies or sessions
+}));
 // api endpoints
 app.use("/api/user", userRouter)
 app.use("/api/product", productRouter)
