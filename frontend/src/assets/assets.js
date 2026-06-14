@@ -61,9 +61,11 @@ import cross_icon from './cross_icon.png'
 import slider from './slider.png'
 import easypaisa_logo from './easypaisa_logo.png'
 import jazzcash_logo from './jazzcash_logo.png'
+import sizeChart from "./size-chart.png"
 
 export const assets = {
     logo,
+    sizeChart,
     logo1,
     hero_img,
     cart_icon,

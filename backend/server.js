@@ -27,8 +27,7 @@ app.use(express.json())
 const allowedOrigins = [
     'https://shop-ai-ui.vercel.app', 
     'http://localhost:5173',
-    'http://localhost:5174',        
-    'http://localhost:3000'          
+    'http://localhost:5174',           
 ];
 
 app.use(cors({
