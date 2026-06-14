@@ -14,7 +14,6 @@ const Navbar = () => {
         navigate('/login');
         localStorage.removeItem('token');
         setToken('');
-        setToken('');
         setCartItems({});
     }
 
@@ -83,21 +82,22 @@ const Navbar = () => {
             </div>
 
             {/*Sidebar menu for small screen*/}
-            <div className={`absolute top-0 right-0 bottom-0 overflow-hidden bg-white transition-all z-50 ${visible ? 'w-full' : 'w-0'}`}>
+            <div className={`fixed top-0 right-0 bottom-0 overflow-hidden bg-white transition-all z-50 ${visible ? 'w-full' : 'w-0'}`}>
                 <div className='flex flex-col text-gray-600 h-full'>
                     <div onClick={() => setVisible(false)} className='flex items-center gap-4 p-3 cursor-pointer'>
                         <img className='h-4 rotate-180' src={assets.dropdown_icon} alt="" />
                         <p>Back</p>
                     </div>
+                    {/* FIXED PATHS BELOW (Added absolute slashes '/') */}
                     <NavLink onClick={() => setVisible(false)} className='py-2 pl-6 border' to='/'>HOME</NavLink>
-                    <NavLink onClick={() => setVisible(false)} className='py-2 pl-6 border' to='collection'>COLLECTION</NavLink>
+                    <NavLink onClick={() => setVisible(false)} className='py-2 pl-6 border' to='/collection'>COLLECTION</NavLink>
                     <NavLink onClick={() => setVisible(false)} className='py-2 pl-6 border' to='/about'>ABOUT</NavLink>
                     <NavLink onClick={() => setVisible(false)} className='py-2 pl-6 border' to='/contact'>CONTACT</NavLink>
 
                     {/* Size Chart Button in Mobile Sidebar */}
                     <button
                         onClick={() => { setVisible(false); setShowSizeChart(true); }}
-                        className='py-2 pl-6 border text-left font-medium text-gray-600'
+                        className='py-2 pl-6 border text-left font-medium text-gray-600 cursor-pointer hover:bg-slate-50'
                     >
                         SIZE CHART
                     </button>
@@ -126,7 +126,7 @@ const Navbar = () => {
                         <div className='w-full overflow-auto mt-6 flex justify-start md:justify-center items-start border border-gray-100 rounded bg-slate-50 matches-scrollbar'>
                             <img
                                 src={assets.sizeChart}
-                                className='w-auto max-w-[none] min-w-[600px] md:min-w-[800px] h-auto object-contain cursor-zoom-in transition-transform duration-200 hover:scale-125 origin-top-left md:origin-center p-2'
+                                className='w-auto max-w-[none] min-w-[600px] md:min-w-[800px] h-auto object-contain  origin-top-left md:origin-center p-2'
                                 alt="Clothing Size Chart"
                             />
                         </div>
