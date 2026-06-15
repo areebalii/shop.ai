@@ -33,7 +33,7 @@ const Chatbot = () => {
     setIsLoading(true);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/chatbot/chat`, {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/chat/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userMessage }),
@@ -43,13 +43,11 @@ const Chatbot = () => {
 
       setChat([
         ...updatedChat,
-        { sender: "bot", text: data?.output?.content || "I couldn't quite process that. Could you try rephrasing?" },
-      ]);
-    } catch (error) {
-      console.error(error);
-      setChat([
-        ...updatedChat,
-        { sender: "bot", text: "I'm having trouble connecting to the store server. Please check your network connection." },
+        {
+          sender: "bot",
+          // 🚀 FIXED: Point directly to data.reply instead of data.output.content
+          text: data.success ? data.reply : "I'm having trouble retrieving that information right now."
+        },
       ]);
     } finally {
       setIsLoading(false);
