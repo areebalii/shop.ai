@@ -59,19 +59,34 @@ const productSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-// Pre-save middleware to automatically calculate discountedPrice
-productSchema.pre('save', async function () {
+// Existing pre-save hook (keep it)
+productSchema.pre('save', function () {
     const discountVal = Number(this.discount) || 0;
     const originalPrice = Number(this.price) || 0;
+    this.discountedPrice = discountVal > 0
+        ? Math.round(originalPrice - (originalPrice * discountVal / 100))
+        : originalPrice;
+});
 
-    if (discountVal > 0) {
-        // Round to 2 decimal places to avoid long floating numbers like 87.000000001
-        const calc = originalPrice - (originalPrice * discountVal / 100);
-        this.discountedPrice = Math.round(calc);
-    } else {
-        this.discountedPrice = originalPrice;
+// Add this: fires on findOneAndUpdate
+productSchema.pre('findOneAndUpdate', function () {
+    const update = this.getUpdate();
+    const discount = Number(update?.discount ?? update?.$set?.discount);
+    const price = Number(update?.price ?? update?.$set?.price);
+
+    if (!isNaN(discount) && !isNaN(price)) {
+        const discountedPrice = discount > 0
+            ? Math.round(price - (price * discount / 100))
+            : price;
+
+        if (update.$set) {
+            update.$set.discountedPrice = discountedPrice;
+        } else {
+            update.discountedPrice = discountedPrice;
+        }
     }
 });
+
 
 export default mongoose.model('Product', productSchema);
 
