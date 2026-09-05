@@ -19,7 +19,6 @@ const port = process.env.PORT || 4000
 connectDB()
 connectCloudinary()
 
-// 1. CORS must run before all other middleware and routes
 const allowedOrigins = [
     'https://shop-ai-ui.vercel.app',
     'http://localhost:5173',
@@ -28,17 +27,20 @@ const allowedOrigins = [
 
 app.use(cors({
     origin: (origin, callback) => {
-        // Allow requests with no origin (like Postman or server-to-server)
-        if (!origin || allowedOrigins.includes(origin)) {
-            return callback(null, true)
+        // Allow requests with no origin (e.g. mobile apps, curl, postman)
+        if (!origin) return callback(null, true);
+
+        // Allow static origins or ANY *.vercel.app deployment preview
+        if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+            return callback(null, true);
         }
-        // Return false instead of throwing new Error()
-        return callback(null, false)
+
+        return callback(null, false);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'token'] // 'token' is critical for cart/auth headers
-}))
+    allowedHeaders: ['Content-Type', 'Authorization', 'token']
+}));
 
 // 2. Body parser
 app.use(express.json())
