@@ -1,3 +1,66 @@
+// import express from 'express'
+// import cors from 'cors'
+// import 'dotenv/config'
+// import connectDB from './config/mongodb.js'
+// import connectCloudinary from './config/cloudinary.js'
+// import userRouter from './routes/user.route.js'
+// import productRouter from './routes/product.route.js'
+// import cartRouter from './routes/cart.route.js'
+// import orderRouter from './routes/order.route.js'
+// import wishlistRouter from './routes/wishlist.route.js'
+// // import chatRouter from './routes/chatRoute.js'
+// import chatbot from './routes/chatbot.js'
+// import chatRouter from './routes/chatRoute.js'
+
+
+// // App Config
+// const app = express()
+// const port = process.env.PORT || 4000
+
+// // Database Connection
+// connectDB()
+// // connect cloudinary
+// connectCloudinary()
+
+// // middlewares
+// app.use(express.json())
+// // app.use(cors())
+// const allowedOrigins = [
+//     'https://shop-ai-ui.vercel.app', 
+//     'http://localhost:5173',
+//     'http://localhost:5174',           
+// ];
+
+// app.use(cors({
+//     origin: function (origin, callback) {
+//         // Allow requests with no origin (like mobile apps, curl, or Postman)
+//         if (!origin) return callback(null, true);
+
+//         if (allowedOrigins.indexOf(origin) === -1) {
+//             const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+//             return callback(new Error(msg), false);
+//         }
+//         return callback(null, true);
+//     },
+//     credentials: true 
+// }));
+// // api endpoints
+// app.use("/api/user", userRouter)
+// app.use("/api/product", productRouter)
+// app.use("/api/cart", cartRouter)
+// app.use("/api/order", orderRouter)
+// app.use('/api/wishlist', wishlistRouter)
+// app.use('/api/chat', chatRouter)
+// // app.use('/api/chatbot', chatbot)
+
+// app.get('/', (req, res) => {
+//     res.send('API is running!')
+// })
+
+// app.listen(port,()=>{
+//     console.log(`Server is running on port http://localhost:${port}`)
+// })
+
 import express from 'express'
 import cors from 'cors'
 import 'dotenv/config'
@@ -8,55 +71,53 @@ import productRouter from './routes/product.route.js'
 import cartRouter from './routes/cart.route.js'
 import orderRouter from './routes/order.route.js'
 import wishlistRouter from './routes/wishlist.route.js'
-// import chatRouter from './routes/chatRoute.js'
 import chatbot from './routes/chatbot.js'
 import chatRouter from './routes/chatRoute.js'
-
 
 // App Config
 const app = express()
 const port = process.env.PORT || 4000
 
-// Database Connection
+// Database & Cloudinary Connection
 connectDB()
-// connect cloudinary
 connectCloudinary()
 
-// middlewares
-app.use(express.json())
-// app.use(cors())
+// 1. CORS must run before all other middleware and routes
 const allowedOrigins = [
-    'https://shop-ai-ui.vercel.app', 
+    'https://shop-ai-ui.vercel.app',
     'http://localhost:5173',
-    'http://localhost:5174',           
-];
+    'http://localhost:5174'
+]
 
 app.use(cors({
-    origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps, curl, or Postman)
-        if (!origin) return callback(null, true);
-
-        if (allowedOrigins.indexOf(origin) === -1) {
-            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-            return callback(new Error(msg), false);
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like Postman or server-to-server)
+        if (!origin || allowedOrigins.includes(origin)) {
+            return callback(null, true)
         }
-        return callback(null, true);
+        // Return false instead of throwing new Error()
+        return callback(null, false)
     },
-    credentials: true 
-}));
-// api endpoints
-app.use("/api/user", userRouter)
-app.use("/api/product", productRouter)
-app.use("/api/cart", cartRouter)
-app.use("/api/order", orderRouter)
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'token'] // 'token' is critical for cart/auth headers
+}))
+
+// 2. Body parser
+app.use(express.json())
+
+// 3. API endpoints
+app.use('/api/user', userRouter)
+app.use('/api/product', productRouter)
+app.use('/api/cart', cartRouter)
+app.use('/api/order', orderRouter)
 app.use('/api/wishlist', wishlistRouter)
 app.use('/api/chat', chatRouter)
-// app.use('/api/chatbot', chatbot)
 
 app.get('/', (req, res) => {
     res.send('API is running!')
 })
 
-app.listen(port,()=>{
-    console.log(`Server is running on port http://localhost:${port}`)
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`)
 })
